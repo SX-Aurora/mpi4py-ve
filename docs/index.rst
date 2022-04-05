@@ -306,7 +306,7 @@ Assume this code is stored in a standard Python script file and run with mpirun 
 
 ::
 
-    $ mpirun -veo -np 2 $(which python) ZeroDivisionError.py
+    $ mpirun -vh -np 2 $(which python) ZeroDivisionError.py
 
 Process 0 raises **ZeroDivisionError** exception before performing a send call to process 1. As the exception is not handled, the Python interpreter running in process 0 will proceed to exit with non-zero status. However, as *mpi4py-ve* installed a finalizer hook to call *MPI_Finalize()* before exit, process 0 will block waiting for other processes to also enter the *MPI_Finalize()* call. Meanwhile, process 1 will block waiting for a message to arrive from process 0, thus never reaching to *MPI_Finalize()*. The whole MPI execution environment is irremediably in a deadlock state.
 
@@ -314,7 +314,7 @@ To alleviate this issue, *mpi4py-ve* offers a simple, alternative command line e
 
     ::
 
-    $ mpirun -veo -np 2 $(which python) -m mpi4pyve ZeroDivisionError.py
+    $ mpirun -vh -np 2 $(which python) -m mpi4pyve ZeroDivisionError.py
 
 
 This is a mimic of the option **-m mpi4py** described in the `mpi4py manual (mpi4py.run) <https://mpi4py.readthedocs.io/en/stable/mpi4py.run.html>`_.

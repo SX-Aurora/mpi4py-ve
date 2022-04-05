@@ -178,7 +178,7 @@ When using the *mpirun* command:
 
     ::
 
-    $ mpirun -veo -np N $(which python) sample.py
+    $ mpirun -vh -np N $(which python) sample.py
 
 | Here, N is the number of MPI processes that are created on an x86 server.
 | NEC MPI 2.21.0 or later supports the environment variable `NMPI_USE_COMMAND_SEARCH_PATH`.
@@ -187,7 +187,7 @@ When using the *mpirun* command:
     ::
 
     $ export NMPI_USE_COMMAND_SEARCH_PATH=ON
-    $ mpirun -veo -np N python sample.py
+    $ mpirun -vh -np N python sample.py
 
 | For details of mpirun command, refer to `NEC MPI User's Guide <https://www.hpc.nec/documents/mpi/g2am01e-NEC_MPI_User_Guide_en/frame.html>`_.
 
