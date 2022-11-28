@@ -53,7 +53,6 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-
 cdef class Op:
 
     """
@@ -138,7 +137,7 @@ cdef class Op:
         def __get__(self):
             return self.Is_commutative()
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
+    @raise_notimpl_for_vai_buffer
     def Reduce_local(self, inbuf, inoutbuf):
         """
         Apply a reduction operator to local data

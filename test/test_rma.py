@@ -95,6 +95,7 @@ class BaseTestRMA(object):
         group.Free()
         for array in arrayimpl.ArrayTypes:
             for typecode in arrayimpl.TypeMap:
+                if typecode in 'FDG': continue
                 for count in range(10):
                     for rank in range(size):
                         sbuf = array(range(count), typecode)
@@ -122,6 +123,7 @@ class BaseTestRMA(object):
         try:
             try:
                 self.WIN.Get_accumulate([obuf, 0, MPI.BYTE], [rbuf, 0, MPI.BYTE], rank)
+                self.WIN.Fence()
             finally:
                 MPI.Free_mem(obuf)
                 MPI.Free_mem(rbuf)
@@ -130,8 +132,10 @@ class BaseTestRMA(object):
         self.WIN.Fence()
         for array in arrayimpl.ArrayTypes:
             for typecode in arrayimpl.TypeMap:
+                if typecode in 'FDG': continue
+                if rank != 0: continue
                 for count in range(10):
-                    for rank in range(size):
+                    for lrank in range(size):
                         ones = array([1]*count, typecode)
                         sbuf = array(range(count), typecode)
                         rbuf = array(-1, typecode, count+1)
@@ -139,16 +143,16 @@ class BaseTestRMA(object):
                         for op in (MPI.SUM, MPI.PROD,
                                    MPI.MAX, MPI.MIN,
                                    MPI.REPLACE, MPI.NO_OP):
-                            self.WIN.Lock(rank)
-                            self.WIN.Put(ones.as_mpi(), rank)
-                            self.WIN.Flush(rank)
+                            self.WIN.Lock(lrank)
+                            self.WIN.Put(ones.as_mpi(), lrank)
+                            self.WIN.Flush(lrank)
                             self.WIN.Get_accumulate(sbuf.as_mpi(),
                                                     rbuf.as_mpi_c(count),
-                                                    rank, op=op)
-                            self.WIN.Flush(rank)
-                            self.WIN.Get(gbuf.as_mpi_c(count), rank)
-                            self.WIN.Flush(rank)
-                            self.WIN.Unlock(rank)
+                                                    lrank, op=op)
+                            self.WIN.Flush(lrank)
+                            self.WIN.Get(gbuf.as_mpi_c(count), lrank)
+                            self.WIN.Flush(lrank)
+                            self.WIN.Unlock(lrank)
                             #
                             for i in range(count):
                                 self.assertEqual(sbuf[i], i)
@@ -158,39 +162,51 @@ class BaseTestRMA(object):
                             self.assertEqual(gbuf[-1], -1)
 
     def testFetchAndOp(self):
+        typemap = MPI._typedict
         group = self.WIN.Get_group()
         size = group.Get_size()
         rank = group.Get_rank()
         group.Free()
         self.WIN.Fence()
-        #obuf = MPI.Alloc_mem(1); memzero(obuf)
-        #rbuf = MPI.Alloc_mem(1); memzero(rbuf)
-        #try:
-        #    try:
-        #        self.WIN.Fetch_and_op([obuf, 1, MPI.BYTE], [rbuf, 1, MPI.BYTE], rank)
-        #    finally:
-        #        MPI.Free_mem(obuf)
-        #        MPI.Free_mem(rbuf)
-        #except NotImplementedError:
-        #    self.skipTest('mpi-win-fetch_and_op')
-        #self.WIN.Fence()
+        blen = MPI.INT.Get_size()
+        obuf = MPI.Alloc_mem(blen); memzero(obuf)
+        rbuf = MPI.Alloc_mem(blen); memzero(rbuf)
+        try:
+            try:
+                self.WIN.Fetch_and_op(
+                    [obuf, 1, MPI.INT], 
+                    [rbuf, 1, MPI.INT],
+                    rank)
+                self.WIN.Fence()
+            finally:
+                MPI.Free_mem(obuf)
+                MPI.Free_mem(rbuf)
+        except NotImplementedError:
+            self.skipTest('mpi-win-fetch_and_op')
+        self.WIN.Fence()
         for array in arrayimpl.ArrayTypes:
             for typecode in arrayimpl.TypeMap:
+                if typecode in 'FDG': continue
+                if rank != 0 : continue
                 obuf = array(+1, typecode)
                 rbuf = array(-1, typecode, 2)
+                datatype = typemap[typecode]
                 for op in (MPI.SUM, MPI.PROD,
                            MPI.MAX, MPI.MIN,
                            MPI.REPLACE, MPI.NO_OP):
-                    for rank in range(size):
+                    for lrank in range(size):
                         for disp in range(3):
-                            self.WIN.Lock(rank)
+                            self.WIN.Lock(lrank)
                             self.WIN.Fetch_and_op(obuf.as_mpi(),
                                                   rbuf.as_mpi_c(1),
-                                                  rank, disp, op=op)
-                            self.WIN.Unlock(rank)
+                                                  lrank, 
+                                                  disp * datatype.size,
+                                                  op=op)
+                            self.WIN.Unlock(lrank)
                             self.assertEqual(rbuf[1], -1)
 
     def testCompareAndSwap(self):
+        typemap = MPI._typedict
         group = self.WIN.Get_group()
         size = group.Get_size()
         rank = group.Get_rank()
@@ -205,6 +221,7 @@ class BaseTestRMA(object):
                                           [cbuf, 1, MPI.BYTE],
                                           [rbuf, 1, MPI.BYTE],
                                           rank, 0)
+                self.WIN.Fence()
             finally:
                 MPI.Free_mem(obuf)
                 MPI.Free_mem(cbuf)
@@ -215,17 +232,21 @@ class BaseTestRMA(object):
         for array in arrayimpl.ArrayTypes:
             for typecode in arrayimpl.TypeMap:
                 if typecode in 'fdg': continue
+                if typecode in 'FDG': continue
+                if rank !=0 : continue
                 obuf = array(+1, typecode)
                 cbuf = array( 0, typecode)
                 rbuf = array(-1, typecode, 2)
-                for rank in range(size):
+                datatype = typemap[typecode]
+                for lrank in range(size):
                     for disp in range(3):
-                        self.WIN.Lock(rank)
+                        self.WIN.Lock(lrank)
                         self.WIN.Compare_and_swap(obuf.as_mpi(),
                                                   cbuf.as_mpi(),
                                                   rbuf.as_mpi_c(1),
-                                                  rank, disp)
-                        self.WIN.Unlock(rank)
+                                                  lrank, 
+                                                  disp * datatype.size)
+                        self.WIN.Unlock(lrank)
                         self.assertEqual(rbuf[1], -1)
 
     def testPutProcNull(self):
@@ -418,7 +439,6 @@ class BaseTestRMA(object):
 class TestRMASelf(BaseTestRMA, unittest.TestCase):
     COMM = MPI.COMM_SELF
 
-@unittest.skipIf(multihost.IS_MULTI_HOST, 'necmpi-multi-host')
 class TestRMAWorld(BaseTestRMA, unittest.TestCase):
     COMM = MPI.COMM_WORLD
 

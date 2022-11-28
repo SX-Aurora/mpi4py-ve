@@ -110,6 +110,9 @@ class BaseTestCCOBuf(object):
                 for root in range(size):
                     for op in (MPI.SUM, MPI.PROD, MPI.MAX, MPI.MIN):
                         sbuf = array(range(size), typecode)
+                        # @unittest.skip('necmpi')
+                        if hasattr(sbuf.as_mpi(), '__ve_array_interface__'):
+                            continue
                         rbuf = array(-1, typecode, size)
                         self.COMM.Reduce(sbuf.as_mpi(),
                                          rbuf.as_mpi(),
@@ -587,6 +590,9 @@ class TestReduceLocal(unittest.TestCase):
                 for op in (MPI.SUM, MPI.PROD, MPI.MAX, MPI.MIN):
                     size = 5
                     sbuf = array(range(1,size+1), typecode)
+                    # @unittest.skip('necmpi')
+                    if hasattr(sbuf.as_mpi(), '__ve_array_interface__'):
+                        continue 
                     rbuf = array(range(0,size+0), typecode)
                     try:
                         op.Reduce_local(sbuf.as_mpi(), rbuf.as_mpi())
@@ -605,6 +611,9 @@ class TestReduceLocal(unittest.TestCase):
         for array in arrayimpl.ArrayTypes:
             for op in (MPI.SUM, MPI.PROD, MPI.MAX, MPI.MIN):
                 sbuf = array(range(3), "i")
+                # @unittest.skip('necmpi')
+                if hasattr(sbuf.as_mpi(), '__ve_array_interface__'):
+                    continue 
                 rbuf = array(range(3), "i")
                 def f(): op.Reduce_local(sbuf.as_mpi_c(2),
                                          rbuf.as_mpi_c(3))

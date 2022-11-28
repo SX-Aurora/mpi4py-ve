@@ -2,7 +2,7 @@ from mpi4pyve import MPI
 import numpy as np
 import nlcpy as vp
 
-comm = MPI.COMM_WORLD.Create_cart((3,))
+comm = MPI.COMM_WORLD.Create_cart((MPI.COMM_WORLD.Get_size(),))
 size = comm.Get_size()
 rank = comm.Get_rank()
 

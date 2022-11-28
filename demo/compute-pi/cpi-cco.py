@@ -5,7 +5,7 @@ within Python objects exposing memory buffers (requires NumPy).
 
 usage::
 
-  $ mpiexec -n <nprocs> python cpi-buf.py
+  $ mpiexec -veo -n <nprocs> python cpi-buf.py
 """
 
 from mpi4pyve import MPI

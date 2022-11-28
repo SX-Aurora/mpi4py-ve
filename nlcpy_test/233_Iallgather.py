@@ -10,7 +10,7 @@ print("rank = ",rank)
 
 #x = vp.array([(rank+1)**2 ,rank], dtype=int)
 x = vp.array([1,2,3], dtype=int)
-y = vp.empty((3,3), dtype=int)
+y = vp.empty((size,3), dtype=int)
 print("x       = ",x)
 print("type(x) = ",type(x))
 

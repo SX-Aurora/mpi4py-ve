@@ -95,7 +95,6 @@ COMBINER_F90_COMPLEX      = MPI_COMBINER_F90_COMPLEX
 COMBINER_F90_INTEGER      = MPI_COMBINER_F90_INTEGER
 
 
-include "NLCPy.pyx"
 
 
 cdef class Datatype:
@@ -689,7 +688,6 @@ cdef class Datatype:
     # Pack and Unpack
     # ---------------
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Pack(self, inbuf, outbuf, int position, Comm comm):
         """
         Pack into contiguous memory according to datatype.
@@ -708,7 +706,6 @@ cdef class Datatype:
                          &position, comm.ob_mpi) )
         return position
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 3))
     def Unpack(self, inbuf, int position, outbuf, Comm comm):
         """
         Unpack from contiguous memory according to datatype.
@@ -740,7 +737,7 @@ cdef class Datatype:
     # Canonical Pack and Unpack
     # -------------------------
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(2, 3))
+    @raise_notimpl_for_vai_buffer
     def Pack_external(self, datarep, inbuf, outbuf, Aint position):
         """
         Pack into contiguous memory according to datatype,
@@ -762,7 +759,7 @@ cdef class Datatype:
                                   obptr, oblen, &position) )
         return position
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(2, 4))
+    @raise_notimpl_for_vai_buffer
     def Unpack_external(self, datarep, inbuf, Aint position, outbuf):
         """
         Unpack from contiguous memory according to datatype,

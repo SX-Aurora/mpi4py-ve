@@ -1,0 +1,113 @@
+%define __os_install_post %{nil}
+%define debug_package     %{nil}
+
+%define mpi4py_ve_topdir    /opt/nec/ve/mpi4py-ve
+%define mpi4py_ve_libdir    %{mpi4py_ve_topdir}/%{mpi4py_ve_version}/lib/%{python_version}
+
+Name:       %{product}
+Version:    %{rpm_version}
+Release:    %{rpm_release}.%{mpi4py_ve_platform}
+Summary:    Message Passing Interface Python library for SX-Aurora TSUBASA
+Group:      Development/Libraries
+Vendor:     NEC Corporation
+License:    BSD-2-Clause
+URL:        https://github.com/SX-Aurora/mpi4py-ve
+BuildArch:  %{mpi4py_ve_arch}
+#
+Source0:    %{product}-%{rpm_version}-%{rpm_release}.tar.gz
+#
+BuildRoot:  %(mktemp -ud %{_tmppath}/%{product}-XXXXXX)
+
+AutoReqProv: no
+
+%description
+mpi4py-ve is an extension to mpi4py for SX-Aurora TSUBASA systems.
+
+
+##################################################
+##
+%prep
+##
+##################################################
+# install Libraries
+%__rm -rf $RPM_BUILD_ROOT
+
+%setup -q -n %{product}-%{rpm_version}-%{rpm_release}
+
+##################################################
+##
+%build
+##
+##################################################
+
+##################################################
+##
+%install
+##
+##################################################
+# create install directories
+install -d --mode=755 %{buildroot}%{mpi4py_ve_libdir}
+cp -r mpi4pyve %{buildroot}%{mpi4py_ve_libdir}/
+find %{buildroot}%{mpi4py_ve_libdir} -name "*.so" -type f | xargs chmod 755
+find %{buildroot}%{mpi4py_ve_libdir} ! -name "*.so" -type f | xargs chmod 644
+
+##############################################
+##
+%clean
+##
+##############################################
+%__rm -rf %{buildroot}
+
+##############################################
+##
+%files
+##
+##############################################
+%defattr(-,root,root,-)
+
+%{mpi4py_ve_libdir}
+
+##############################################
+##
+%post
+##
+##############################################
+if [ ! -d /usr/lib64/%{python_version}/site-packages ]; then
+  install -m 755 -d /usr/lib64/%{python_version}/site-packages
+fi
+cd /usr/lib64/%{python_version}/site-packages/
+if [ ! -e mpi4py-ve.pth ]; then
+  touch mpi4py-ve.pth
+  chmod 644 mpi4py-ve.pth
+fi
+mpi4py_ve_path=`ls -d /opt/nec/ve/mpi4py-ve/*.*.*/lib/%{python_version} | sort -rV | head -1`
+echo ${mpi4py_ve_path} > mpi4py-ve.pth
+
+##############################################
+##
+%postun
+##
+##############################################
+if [ $1 == 0 ]; then
+  rm -rf %{mpi4py_ve_libdir}/mpi4py-ve
+  rmdir --ignore-fail-on-non-empty %{mpi4py_ve_libdir} > /dev/null 2>&1
+  rmdir --ignore-fail-on-non-empty %{mpi4py_ve_topdir}/%{mpi4py_ve_version}/lib > /dev/null 2>&1
+  rmdir --ignore-fail-on-non-empty %{mpi4py_ve_topdir}/%{mpi4py_ve_version} > /dev/null 2>&1
+  rmdir --ignore-fail-on-non-empty %{mpi4py_ve_topdir} > /dev/null 2>&1
+  if ls -d /opt/nec/ve/mpi4py-ve/*.*.*/lib/%{python_version}/mpi4py_ve > /dev/null 2>&1; then
+    mpi4py_ve_path=`ls -d /opt/nec/ve/mpi4py-ve/*.*.*/lib/%{python_version} | sort -rV | head -1`
+    echo ${mpi4py_ve_path} > /usr/lib64/%{python_version}/site-packages/mpi4py-ve.pth
+  else
+    rm -f  /usr/lib64/%{python_version}/site-packages/mpi4py-ve.pth
+    rmdir --ignore-fail-on-non-empty /usr/lib64/%{python_version}/site-packages > /dev/null 2>&1
+    rmdir --ignore-fail-on-non-empty /usr/lib64/%{python_version} > /dev/null 2>&1
+  fi
+fi
+
+##############################################
+##
+%changelog
+##
+##############################################
+* Tue Oct 25 2022 NEC Corporation
+- First version of this spec file.

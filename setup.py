@@ -94,7 +94,6 @@ metadata = {
     }
 
 metadata['provides'] = ['mpi4py_ve']
-metadata['install_requires'] = ['nlcpy>=2.1.1']
 
 # --------------------------------------------------------------------
 # Extension modules
@@ -453,8 +452,10 @@ def run_setup():
         if not has_src or has_git or has_hg:
             setup_args['setup_requires'] = ['Cython>='+CYTHON]
     #
-    setup(packages     = ['mpi4pyve', 'mpi4pyve.futures'],
-          package_dir  = {'mpi4pyve' : 'src/mpi4pyve'},
+    setup(packages     = ['mpi4pyve', 'mpi4pyve.futures', 'mpi4pyve.util', 'mpi4pyve.veo'],
+          package_dir  = {'mpi4pyve' : 'src/mpi4pyve',
+                          'mpi4pyve.util' : 'src/mpi4pyve/util',
+                          'mpi4pyve.veo' : 'src/mpi4pyve/veo'},
           package_data = {'mpi4pyve' : ['*.pxd',
                                       'include/mpi4pyve/*.h',
                                       'include/mpi4pyve/*.i',

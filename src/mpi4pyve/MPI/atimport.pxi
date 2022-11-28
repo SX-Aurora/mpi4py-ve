@@ -91,7 +91,7 @@ ctypedef struct Options:
 cdef Options options
 options.initialize = 1
 options.threads = 1
-options.thread_level = MPI_THREAD_MULTIPLE
+options.thread_level = MPI_THREAD_SERIALIZED
 options.finalize = 1
 options.fast_reduce = 1
 options.recv_mprobe = 1
@@ -106,7 +106,7 @@ cdef int getOptions(Options* opts) except -1:
     cdef object rc
     opts.initialize = 1
     opts.threads = 1
-    opts.thread_level = MPI_THREAD_MULTIPLE
+    opts.thread_level = MPI_THREAD_SERIALIZED
     opts.finalize = 1
     opts.fast_reduce = 1
     opts.recv_mprobe = 1
@@ -116,7 +116,7 @@ cdef int getOptions(Options* opts) except -1:
     #
     cdef object initialize = True
     cdef object threads = True
-    cdef object thread_level = 'multiple'
+    cdef object thread_level = 'serialized'
     cdef object finalize = None
     cdef object fast_reduce = True
     cdef object recv_mprobe = True
@@ -272,6 +272,71 @@ def _set_abort_status(object status):
         abort_status = status
     except:
         abort_status = 1 if status else 0
+
+def print_option():
+    print('initialize   :', options.initialize)
+    print('threads      :', options.threads)
+    print('thread_level :', options.thread_level)
+    print('finalize     :', options.finalize)
+    print('fast_reduce  :', options.fast_reduce)
+    print('recv_mprobe  :', options.recv_mprobe)
+    print('errors       :', options.errors)
+
+# -----------------------------------------------------------------------------
+
+# Number of processes assigned to each VH when started with multiple VH.
+import os
+from libc.stdlib cimport malloc, free
+from libc.string cimport strcmp
+
+cdef int get_mpi_local_size_from_nodeid(int nodeid):
+    cdef int local_size = 0
+    cdef int size
+    comm = MPI_COMM_WORLD
+    MPI_Comm_size(comm, &size)
+    cdef int* nodes_nodeid = <int*>malloc(sizeof(int) * size)
+    MPI_Allgather(&nodeid, 1, MPI_INT, nodes_nodeid, 1, MPI_INT, comm)
+    for rank in range(0, size):
+        if nodeid ==  nodes_nodeid[rank]:
+            local_size += 1
+    free(nodes_nodeid)
+    return local_size
+
+
+cdef int get_mpi_local_size_from_processname():
+    cdef int local_size = 0
+    cdef char processor_name[MPI_MAX_PROCESSOR_NAME + 1]
+    cdef int resultlen 
+    cdef int size
+    comm = MPI_COMM_WORLD
+    MPI_Comm_size(comm, &size)
+    MPI_Get_processor_name(processor_name, &resultlen)
+    cdef char* nodes_processor_name = <char*>malloc(sizeof(processor_name) * size)
+    MPI_Allgather(processor_name, sizeof(processor_name), MPI_CHAR, 
+                  nodes_processor_name, sizeof(processor_name) ,MPI_CHAR, comm)
+    for rank in range(0, size):
+        if strcmp( processor_name , &nodes_processor_name[rank * sizeof(processor_name)]) == 0:
+            local_size += 1
+    free(nodes_processor_name)
+    return local_size
+
+cdef void set_mpi_local_size():
+    if not mpi_active(): return
+    os.environ["_MPI4PYVE_MPI_INITIALIZED"] = '1'
+
+    cdef int nodeid = -1
+    try:
+        nodeid = int(os.environ['MPINODEID'])
+    except:
+        pass
+
+    cdef int local_size = 0
+    if nodeid >= 0:
+        local_size = get_mpi_local_size_from_nodeid(nodeid)
+    else:
+        local_size = get_mpi_local_size_from_processname()
+    os.environ["_MPI4PYVE_MPI_LOCAL_SIZE"] = str(local_size)
+        
 
 # -----------------------------------------------------------------------------
 

@@ -111,7 +111,7 @@ class Config(object):
             else:
                 section = mpiopt
         if not filename: filename = "mpi.cfg"
-        if not section:  section  = "mpi"
+        if not section:  section  = "necmpi"
 
         mach = platform.machine()
         arch = platform.architecture()[0]

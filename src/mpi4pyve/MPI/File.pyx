@@ -283,7 +283,6 @@ cdef class File:
     # Data Access with Explicit Offsets
     # ---------------------------------
 
-    @recv_buffer_for_nlcpy_array(arg_idx=2)
     def Read_at(self, Offset offset, buf, Status status=None):
         """
         Read using explicit offset
@@ -293,7 +292,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_at(
             self.ob_mpi, offset, m.buf, m.count, m.dtype, statusp) )
 
-    @recv_buffer_for_nlcpy_array(arg_idx=2)
     def Read_at_all(self, Offset offset, buf, Status status=None):
         """
         Collective read using explicit offset
@@ -303,7 +301,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_at_all(
             self.ob_mpi, offset, m.buf, m.count, m.dtype, statusp) )
 
-    @send_for_nlcpy_array
     def Write_at(self, Offset offset, buf, Status status=None):
         """
         Write using explicit offset
@@ -313,7 +310,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_write_at(
             self.ob_mpi, offset, m.buf, m.count, m.dtype, statusp) )
 
-    @send_for_nlcpy_array
     def Write_at_all(self, Offset offset, buf, Status status=None):
         """
         Collective write using explicit offset
@@ -323,58 +319,40 @@ cdef class File:
         with nogil: CHKERR( MPI_File_write_at_all(
             self.ob_mpi, offset, m.buf, m.count, m.dtype, statusp) )
 
-    @nb_recv_for_nlcpy_array(arg_idx=2)
-    def Iread_at(self, Offset offset, buf,
-                 numpy_arr=None, nlcpy_arr=None):
+    def Iread_at(self, Offset offset, buf):
                   
         """
         Nonblocking read using explicit offset
         """
         cdef _p_msg_io m = message_io_read(buf)
-        cdef Request request
-        if numpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arr,
-                                               nlcpy_arr=nlcpy_arr)
+        cdef Request request = Request.__new__(Request)
         with nogil: CHKERR( MPI_File_iread_at(
             self.ob_mpi, offset, m.buf, m.count, m.dtype, &request.ob_mpi) )
         request.ob_buf = m
         return request
 
-    @nb_recv_for_nlcpy_array(arg_idx=2)
-    def Iread_at_all(self, Offset offset, buf,
-                     numpy_arr=None, nlcpy_arr=None):
+    def Iread_at_all(self, Offset offset, buf):
         """
         Nonblocking collective read using explicit offset
         """
         cdef _p_msg_io m = message_io_read(buf)
-        cdef Request request
-        if numpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arr,
-                                               nlcpy_arr=nlcpy_arr)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_File_iread_at_all(
             self.ob_mpi, offset, m.buf, m.count, m.dtype, &request.ob_mpi) )
         request.ob_buf = m
         return request
 
-    @send_for_nlcpy_array
     def Iwrite_at(self, Offset offset, buf):
         """
         Nonblocking write using explicit offset
         """
         cdef _p_msg_io m = message_io_write(buf)
-        cdef Request request = <Request>Request.__new__(Request)
+        cdef Request request = Request.__new__(Request)
         with nogil: CHKERR( MPI_File_iwrite_at(
             self.ob_mpi, offset, m.buf, m.count, m.dtype, &request.ob_mpi) )
         request.ob_buf = m
         return request
 
-    @send_for_nlcpy_array
     def Iwrite_at_all(self, Offset offset, buf):
         """
         Nonblocking collective write using explicit offset
@@ -389,7 +367,6 @@ cdef class File:
     # Data Access with Individual File Pointers
     # -----------------------------------------
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Read(self, buf, Status status=None):
         """
         Read using individual file pointer
@@ -399,7 +376,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read(
             self.ob_mpi, m.buf, m.count, m.dtype, statusp) )
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Read_all(self, buf, Status status=None):
         """
         Collective read using individual file pointer
@@ -409,7 +385,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_all(
             self.ob_mpi, m.buf, m.count, m.dtype, statusp) )
 
-    @send_for_nlcpy_array
     def Write(self, buf, Status status=None):
         """
         Write using individual file pointer
@@ -419,7 +394,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_write(
             self.ob_mpi, m.buf, m.count, m.dtype, statusp) )
 
-    @send_for_nlcpy_array
     def Write_all(self, buf, Status status=None):
         """
         Collective write using individual file pointer
@@ -429,57 +403,39 @@ cdef class File:
         with nogil: CHKERR( MPI_File_write_all(
             self.ob_mpi, m.buf, m.count, m.dtype, statusp) )
 
-    @nb_recv_for_nlcpy_array(arg_idx=1)
-    def Iread(self, buf,
-              numpy_arr=None, nlcpy_arr=None):
+    def Iread(self, buf):
         """
         Nonblocking read using individual file pointer
         """
         cdef _p_msg_io m = message_io_read(buf)
-        cdef Request request
-        if numpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arr,
-                                               nlcpy_arr=nlcpy_arr)
+        cdef Request request = Request.__new__(Request)
         with nogil: CHKERR( MPI_File_iread(
             self.ob_mpi, m.buf, m.count, m.dtype, &request.ob_mpi) )
         request.ob_buf = m
         return request
 
-    @nb_recv_for_nlcpy_array(arg_idx=1)
-    def Iread_all(self, buf,
-                  numpy_arr=None, nlcpy_arr=None):
+    def Iread_all(self, buf):
         """
         Nonblocking collective read using individual file pointer
         """
         cdef _p_msg_io m = message_io_read(buf)
-        cdef Request request
-        if numpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arr,
-                                               nlcpy_arr=nlcpy_arr)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_File_iread_all(
             self.ob_mpi, m.buf, m.count, m.dtype, &request.ob_mpi) )
         request.ob_buf = m
         return request
 
-    @send_for_nlcpy_array
     def Iwrite(self, buf):
         """
         Nonblocking write using individual file pointer
         """
         cdef _p_msg_io m = message_io_write(buf)
-        cdef Request request = <Request>Request.__new__(Request)
+        cdef Request request = Request.__new__(Request)
         with nogil: CHKERR( MPI_File_iwrite(
             self.ob_mpi, m.buf, m.count, m.dtype, &request.ob_mpi) )
         request.ob_buf = m
         return request
 
-    @send_for_nlcpy_array
     def Iwrite_all(self, buf):
         """
         Nonblocking collective write using individual file pointer
@@ -519,7 +475,6 @@ cdef class File:
     # Data Access with Shared File Pointers
     # -------------------------------------
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Read_shared(self, buf, Status status=None):
         """
         Read using shared file pointer
@@ -529,7 +484,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_shared(
             self.ob_mpi, m.buf, m.count, m.dtype, statusp) )
 
-    @send_for_nlcpy_array
     def Write_shared(self, buf, Status status=None):
         """
         Write using shared file pointer
@@ -539,38 +493,28 @@ cdef class File:
         with nogil: CHKERR( MPI_File_write_shared(
             self.ob_mpi, m.buf, m.count, m.dtype, statusp) )
 
-    @nb_recv_for_nlcpy_array(arg_idx=1)
-    def Iread_shared(self, buf,
-                     numpy_arr=None, nlcpy_arr=None):
+    def Iread_shared(self, buf):
         """
         Nonblocking read using shared file pointer
         """
         cdef _p_msg_io m = message_io_read(buf)
-        cdef Request request
-        if numpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arr,
-                                               nlcpy_arr=nlcpy_arr)
+        cdef Request request = Request.__new__(Request)
         with nogil: CHKERR( MPI_File_iread_shared(
             self.ob_mpi, m.buf, m.count, m.dtype, &request.ob_mpi) )
         request.ob_buf = m
         return request
 
-    @send_for_nlcpy_array
     def Iwrite_shared(self, buf):
         """
         Nonblocking write using shared file pointer
         """
         cdef _p_msg_io m = message_io_write(buf)
-        cdef Request request = <Request>Request.__new__(Request)
+        cdef Request request = Request.__new__(Request)
         with nogil: CHKERR( MPI_File_iwrite_shared(
             self.ob_mpi, m.buf, m.count, m.dtype, &request.ob_mpi) )
         request.ob_buf = m
         return request
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Read_ordered(self, buf, Status status=None):
         """
         Collective read using shared file pointer
@@ -580,7 +524,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_ordered(
             self.ob_mpi, m.buf, m.count, m.dtype, statusp) )
 
-    @send_for_nlcpy_array
     def Write_ordered(self, buf, Status status=None):
         """
         Collective write using shared file pointer
@@ -612,7 +555,6 @@ cdef class File:
 
     # explicit offset
 
-    @recv_buffer_for_nlcpy_array(arg_idx=2)
     def Read_at_all_begin(self, Offset offset, buf):
         """
         Start a split collective read using explict offset
@@ -621,7 +563,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_at_all_begin(
             self.ob_mpi, offset, m.buf, m.count, m.dtype) )
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Read_at_all_end(self, buf, Status status=None):
         """
         Complete a split collective read using explict offset
@@ -631,7 +572,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_at_all_end(
             self.ob_mpi, m.buf, statusp) )
 
-    @send_for_nlcpy_array
     def Write_at_all_begin(self, Offset offset, buf):
         """
         Start a split collective write using explict offset
@@ -640,7 +580,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_write_at_all_begin(
             self.ob_mpi, offset, m.buf, m.count, m.dtype) )
 
-    @send_for_nlcpy_array
     def Write_at_all_end(self, buf, Status status=None):
         """
         Complete a split collective write using explict offset
@@ -652,7 +591,6 @@ cdef class File:
 
     # individual file pointer
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Read_all_begin(self, buf):
         """
         Start a split collective read
@@ -662,7 +600,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_all_begin(
             self.ob_mpi, m.buf, m.count, m.dtype) )
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Read_all_end(self, buf, Status status=None):
         """
         Complete a split collective read
@@ -673,7 +610,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_all_end(
             self.ob_mpi, m.buf, statusp) )
 
-    @send_for_nlcpy_array
     def Write_all_begin(self, buf):
         """
         Start a split collective write
@@ -683,7 +619,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_write_all_begin(
             self.ob_mpi, m.buf, m.count, m.dtype) )
 
-    @send_for_nlcpy_array
     def Write_all_end(self, buf, Status status=None):
         """
         Complete a split collective write
@@ -696,7 +631,6 @@ cdef class File:
 
     # shared file pointer
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Read_ordered_begin(self, buf):
         """
         Start a split collective read
@@ -706,7 +640,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_ordered_begin(
             self.ob_mpi, m.buf, m.count, m.dtype) )
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Read_ordered_end(self, buf, Status status=None):
         """
         Complete a split collective read
@@ -717,7 +650,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_read_ordered_end(
             self.ob_mpi, m.buf, statusp) )
 
-    @send_for_nlcpy_array
     def Write_ordered_begin(self, buf):
         """
         Start a split collective write using
@@ -727,7 +659,6 @@ cdef class File:
         with nogil: CHKERR( MPI_File_write_ordered_begin(
             self.ob_mpi, m.buf, m.count, m.dtype) )
 
-    @send_for_nlcpy_array
     def Write_ordered_end(self, buf, Status status=None):
         """
         Complete a split collective write

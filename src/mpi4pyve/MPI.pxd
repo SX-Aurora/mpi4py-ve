@@ -95,8 +95,6 @@ ctypedef public api class Request [
     cdef MPI_Request ob_mpi
     cdef unsigned    flags
     cdef object      ob_buf
-    cdef object      numpy_arr
-    cdef object      nlcpy_arr
 
 ctypedef public api class Prequest(Request) [
     type   PyMPIPrequest_Type,

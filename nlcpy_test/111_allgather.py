@@ -17,9 +17,8 @@ x = comm.allgather(x)
 print("allgather done")
 print("x       = ",x)
 
-print("type(x[0]) = ",type(x[0]))
-print("type(x[1]) = ",type(x[1]))
-print("type(x[2]) = ",type(x[2])) 
+for i in range(rank):
+    print("type(x[{}]) = ".format(i),type(x[i]))
 import sys
 try:
     for y in x:

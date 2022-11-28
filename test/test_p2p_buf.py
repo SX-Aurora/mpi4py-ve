@@ -35,7 +35,7 @@ class BaseTestP2PBuf(object):
                     self.COMM.Sendrecv_replace(buf.as_mpi(), dest, 0, source, 0)
                     for value in buf:
                         self.assertEqual(value, source)
-
+    
     def testSendRecv(self):
         size = self.COMM.Get_size()
         rank = self.COMM.Get_rank()
@@ -46,36 +46,38 @@ class BaseTestP2PBuf(object):
                     sbuf = array( s, typecode, s)
                     rbuf = array(-1, typecode, s)
                     mem  = array( 0, typecode, 2*(s+MPI.BSEND_OVERHEAD)).as_raw()
-                    if size == 1:
-                        MPI.Attach_buffer(mem)
-                        rbuf = sbuf
-                        MPI.Detach_buffer()
-                    elif rank == 0:
-                        MPI.Attach_buffer(mem)
-                        self.COMM.Ibsend(sbuf.as_mpi(), 1, 0).Wait()
-                        self.COMM.Bsend(sbuf.as_mpi(), 1, 0)
-                        MPI.Detach_buffer()
-                        self.COMM.Send(sbuf.as_mpi(), 1, 0)
-                        self.COMM.Ssend(sbuf.as_mpi(), 1, 0)
-                        self.COMM.Recv(rbuf.as_mpi(),  1, 0)
-                        self.COMM.Recv(rbuf.as_mpi(),  1, 0)
-                        self.COMM.Recv(rbuf.as_mpi(), 1, 0)
-                        self.COMM.Recv(rbuf.as_mpi(), 1, 0)
-                    elif rank == 1:
-                        self.COMM.Recv(rbuf.as_mpi(), 0, 0)
-                        self.COMM.Recv(rbuf.as_mpi(), 0, 0)
-                        self.COMM.Recv(rbuf.as_mpi(), 0, 0)
-                        self.COMM.Recv(rbuf.as_mpi(), 0, 0)
-                        MPI.Attach_buffer(mem)
-                        self.COMM.Ibsend(sbuf.as_mpi(), 0, 0).Wait()
-                        self.COMM.Bsend(sbuf.as_mpi(), 0, 0)
-                        MPI.Detach_buffer()
-                        self.COMM.Send(sbuf.as_mpi(), 0, 0)
-                        self.COMM.Ssend(sbuf.as_mpi(), 0, 0)
-                    else:
-                        rbuf = sbuf
-                    for value in rbuf:
-                        self.assertEqual(value, s)
+                    # @unittest.skip('necmpi')
+                    if not hasattr(mem, '__ve_array_interface__'):
+                        if size == 1:
+                            MPI.Attach_buffer(mem)
+                            rbuf = sbuf
+                            MPI.Detach_buffer()
+                        elif rank == 0:
+                            MPI.Attach_buffer(mem)
+                            self.COMM.Ibsend(sbuf.as_mpi(), 1, 0).Wait()
+                            self.COMM.Bsend(sbuf.as_mpi(), 1, 0)
+                            MPI.Detach_buffer()
+                            self.COMM.Send(sbuf.as_mpi(), 1, 0)
+                            self.COMM.Ssend(sbuf.as_mpi(), 1, 0)
+                            self.COMM.Recv(rbuf.as_mpi(),  1, 0)
+                            self.COMM.Recv(rbuf.as_mpi(),  1, 0)
+                            self.COMM.Recv(rbuf.as_mpi(), 1, 0)
+                            self.COMM.Recv(rbuf.as_mpi(), 1, 0)
+                        elif rank == 1:
+                            self.COMM.Recv(rbuf.as_mpi(), 0, 0)
+                            self.COMM.Recv(rbuf.as_mpi(), 0, 0)
+                            self.COMM.Recv(rbuf.as_mpi(), 0, 0)
+                            self.COMM.Recv(rbuf.as_mpi(), 0, 0)
+                            MPI.Attach_buffer(mem)
+                            self.COMM.Ibsend(sbuf.as_mpi(), 0, 0).Wait()
+                            self.COMM.Bsend(sbuf.as_mpi(), 0, 0)
+                            MPI.Detach_buffer()
+                            self.COMM.Send(sbuf.as_mpi(), 0, 0)
+                            self.COMM.Ssend(sbuf.as_mpi(), 0, 0)
+                        else:
+                            rbuf = sbuf
+                        for value in rbuf:
+                            self.assertEqual(value, s)
                     #
                     rank = self.COMM.Get_rank()
                     sbuf = array( s, typecode, s)
@@ -386,27 +388,29 @@ class BaseTestP2PBuf(object):
                             self.assertEqual(value, -1)
                         #
                         mem = array( 0, typecode, s+MPI.BSEND_OVERHEAD).as_raw()
-                        sbuf = array( s, typecode, s)
-                        rbuf = array(-1, typecode, s+xs)
-                        MPI.Attach_buffer(mem)
-                        sendreq = self.COMM.Bsend_init(sbuf.as_mpi(), dest, 0)
-                        recvreq = self.COMM.Recv_init(rbuf.as_mpi(), source, 0)
-                        sendreq.Start()
-                        recvreq.Start()
-                        sendreq.Wait()
-                        recvreq.Wait()
-                        MPI.Detach_buffer()
-                        self.assertNotEqual(sendreq, MPI.REQUEST_NULL)
-                        self.assertNotEqual(recvreq, MPI.REQUEST_NULL)
-                        sendreq.Free()
-                        recvreq.Free()
-                        self.assertEqual(sendreq, MPI.REQUEST_NULL)
-                        self.assertEqual(recvreq, MPI.REQUEST_NULL)
-                        for value in rbuf[:s]:
-                            self.assertEqual(value, s)
-                        for value in rbuf[s:]:
-                            self.assertEqual(value, -1)
-                        #
+                        # @unittest.skip('necmpi')
+                        if not hasattr(mem, '__ve_array_interface__'):
+                            sbuf = array( s, typecode, s)
+                            rbuf = array(-1, typecode, s+xs)
+                            MPI.Attach_buffer(mem)
+                            sendreq = self.COMM.Bsend_init(sbuf.as_mpi(), dest, 0)
+                            recvreq = self.COMM.Recv_init(rbuf.as_mpi(), source, 0)
+                            sendreq.Start()
+                            recvreq.Start()
+                            sendreq.Wait()
+                            recvreq.Wait()
+                            MPI.Detach_buffer()
+                            self.assertNotEqual(sendreq, MPI.REQUEST_NULL)
+                            self.assertNotEqual(recvreq, MPI.REQUEST_NULL)
+                            sendreq.Free()
+                            recvreq.Free()
+                            self.assertEqual(sendreq, MPI.REQUEST_NULL)
+                            self.assertEqual(recvreq, MPI.REQUEST_NULL)
+                            for value in rbuf[:s]:
+                                 self.assertEqual(value, s)
+                            for value in rbuf[s:]:
+                                self.assertEqual(value, -1)
+                        
                         rank = self.COMM.Get_rank()
                         sbuf = array( s, typecode, s)
                         rbuf = array(-1, typecode, s+xs)

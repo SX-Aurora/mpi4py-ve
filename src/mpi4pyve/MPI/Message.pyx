@@ -117,7 +117,6 @@ cdef class Message:
     # Matched receives
     # ----------------
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Recv(self, buf, Status status=None):
         """
         Blocking receive of matched message
@@ -134,8 +133,7 @@ cdef class Message:
         if self is not __MESSAGE_NO_PROC__:
             self.ob_mpi = message
 
-    @nb_recv_for_nlcpy_array(arg_idx=1)
-    def Irecv(self, buf, numpy_arr=None, nlcpy_arr=None):
+    def Irecv(self, buf):
         """
         Nonblocking receive of matched message
         """
@@ -144,13 +142,7 @@ cdef class Message:
         if message == MPI_MESSAGE_NO_PROC:
             source = MPI_PROC_NULL
         cdef _p_msg_p2p rmsg = message_p2p_recv(buf, source)
-        cdef Request request
-        if numpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arr,
-                                               nlcpy_arr=nlcpy_arr)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Imrecv(
             rmsg.buf, rmsg.count, rmsg.dtype,
             &message, &request.ob_mpi) )
@@ -184,7 +176,6 @@ cdef class Message:
         if flag == 0: return None
         return message
     #
-    @recv_for_nlcpy_array
     def recv(self, Status status=None):
         """Blocking receive of matched message"""
         cdef object rmsg = self.ob_buf

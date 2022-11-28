@@ -9,7 +9,7 @@ rank = comm.Get_rank()
 if rank == 0:
     x = vp.array([1,2,3], dtype=int)
 else:
-    x = vp.empty(3, dtype=int)
+    x = vp.zeros(3, dtype=int)
 
 print("rank = ",rank)
 

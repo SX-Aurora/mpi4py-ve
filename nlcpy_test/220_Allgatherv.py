@@ -9,7 +9,7 @@ rank = comm.Get_rank()
 print("rank = ",rank)
 
 x = vp.array([(rank+1)**2 ,rank], dtype=int)
-y = vp.empty((size, 2), dtype=int)
+y = vp.zeros((size, 2), dtype=int)
 print("x       = ",x)
 print("type(x) = ",type(x))
 print("y       = ",y)

@@ -28,37 +28,37 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-import nlcpy
+def _check_vai_buffer(obj):
+    try: return hasattr(obj, '__ve_array_interface__')
+    except: return False
 
-
-def _find_nlcpy(args):
+def _find_vai_buffer(args):
     for arg in args:
-        _raise_nlcpy_array(arg)
+        _raise_vai_buffer(arg)
     return
 
-
-def _find_nlcpy_kwargs(kwargs):
+def _find_vai_buffer_kwargs(kwargs):
     for k in kwargs.keys():
-        _raise_nlcpy_array(kwargs[k])
+        _raise_vai_buffer(kwargs[k])
     return
 
 
-def _raise_nlcpy_array(arg):
-    if isinstance(arg, nlcpy.core.core.ndarray):
-        raise NotImplementedError('NLCPy array is not implemented yet.')
+def _raise_vai_buffer(arg):
+    if _check_vai_buffer(arg):
+        raise NotImplementedError('__ve_array_interface__  is not implemented yet.')
     elif isinstance(arg, (list, tuple)):
-        _find_nlcpy(arg)
+        _find_vai_buffer(arg)
     elif isinstance(arg, dict):
-        _find_nlcpy_kwargs(arg)
+        _find_vai_buffer_kwargs(arg)
     return
 
 
-def check_for_nlcpy_array(func):
-    def _raise_nlcpy_array_wrapper(*args, **kwargs):
-        _find_nlcpy(args)
-        _find_nlcpy_kwargs(kwargs)
+def raise_notimpl_for_vai_buffer(func):
+    def _raise_vai_buffer_wrapper(*args, **kwargs):
+        _find_vai_buffer(args)
+        _find_vai_buffer_kwargs(kwargs)
         return func(*args, **kwargs)
-    return _raise_nlcpy_array_wrapper
+    return _raise_vai_buffer_wrapper
 
 
 def raise_notimpl_for_necmpi(func):

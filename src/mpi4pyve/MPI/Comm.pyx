@@ -53,11 +53,8 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-import numpy
-import nlcpy
 import mpi4pyve
-include "NLCPy.pyx"
-include "Notimpl.pyx"
+
 
 # Communicator Comparisons
 # ------------------------
@@ -320,7 +317,6 @@ cdef class Comm:
 
     # Blocking Send and Receive Operations
     # ------------------------------------
-    @send_for_nlcpy_array
     def Send(self, buf, int dest, int tag=0):
         """
         Blocking send
@@ -334,7 +330,6 @@ cdef class Comm:
             smsg.buf, smsg.count, smsg.dtype,
             dest, tag, self.ob_mpi) )
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Recv(self, buf, int source=ANY_SOURCE, int tag=ANY_TAG,
              Status status=None):
         """
@@ -350,7 +345,6 @@ cdef class Comm:
 
     # Send-Receive
     # ------------
-    @sendrecv_buffer_kwarg_for_nlcpy_array
     def Sendrecv(self, sendbuf, int dest, int sendtag=0,
                  recvbuf=None, int source=ANY_SOURCE, int recvtag=ANY_TAG,
                  Status status=None):
@@ -373,7 +367,6 @@ cdef class Comm:
             rmsg.buf, rmsg.count, rmsg.dtype, source, recvtag,
             self.ob_mpi, statusp) )
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Sendrecv_replace(self, buf, int dest, int sendtag=0,
                          int source=ANY_SOURCE, int recvtag=ANY_TAG,
                          Status status=None):
@@ -401,7 +394,6 @@ cdef class Comm:
     # Nonblocking Communications
     # --------------------------
 
-    @send_for_nlcpy_array
     def Isend(self, buf, int dest, int tag=0):
         """
         Nonblocking send
@@ -414,20 +406,12 @@ cdef class Comm:
         request.ob_buf = smsg
         return request
 
-    @nb_recv_for_nlcpy_array(arg_idx=1)
-    def Irecv(self, buf, int source=ANY_SOURCE, int tag=ANY_TAG,
-              numpy_arr=None, nlcpy_arr=None):
+    def Irecv(self, buf, int source=ANY_SOURCE, int tag=ANY_TAG):
         """
         Nonblocking receive
         """
         cdef _p_msg_p2p rmsg = message_p2p_recv(buf, source)
-        cdef Request request
-        if numpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arr,
-                                               nlcpy_arr=nlcpy_arr)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Irecv(
             rmsg.buf, rmsg.count, rmsg.dtype,
             source, tag, self.ob_mpi, &request.ob_mpi) )
@@ -494,7 +478,6 @@ cdef class Comm:
     # Persistent Communication
     # ------------------------
 
-    @send_for_nlcpy_array
     def Send_init(self, buf, int dest, int tag=0):
         """
         Create a persistent request for a standard send
@@ -507,20 +490,12 @@ cdef class Comm:
         request.ob_buf = smsg
         return request
 
-    @nb_recv_for_nlcpy_array(arg_idx=1)
-    def Recv_init(self, buf, int source=ANY_SOURCE, int tag=ANY_TAG,
-                  numpy_arr=None, nlcpy_arr=None):
+    def Recv_init(self, buf, int source=ANY_SOURCE, int tag=ANY_TAG):
         """
         Create a persistent request for a receive
         """
         cdef _p_msg_p2p rmsg = message_p2p_recv(buf, source)
-        cdef Prequest request
-        if numpy_arr is None:
-            request = <Prequest>Prequest.__new__(Prequest)
-        else:
-            request = <Prequest>Prequest.__new__(Prequest,
-                                                 numpy_arr=numpy_arr,
-                                                 nlcpy_arr=nlcpy_arr)
+        cdef Prequest request = <Prequest>Prequest.__new__(Prequest)
         with nogil: CHKERR( MPI_Recv_init(
             rmsg.buf, rmsg.count, rmsg.dtype,
             source, tag, self.ob_mpi, &request.ob_mpi) )
@@ -532,7 +507,7 @@ cdef class Comm:
 
     # Blocking calls
 
-    @send_for_nlcpy_array
+    @raise_notimpl_for_vai_buffer
     def Bsend(self, buf, int dest, int tag=0):
         """
         Blocking send in buffered mode
@@ -542,7 +517,6 @@ cdef class Comm:
             smsg.buf, smsg.count, smsg.dtype,
             dest, tag, self.ob_mpi) )
 
-    @send_for_nlcpy_array
     def Ssend(self, buf, int dest, int tag=0):
         """
         Blocking send in synchronous mode
@@ -552,7 +526,6 @@ cdef class Comm:
             smsg.buf, smsg.count, smsg.dtype,
             dest, tag, self.ob_mpi) )
 
-    @send_for_nlcpy_array
     def Rsend(self, buf, int dest, int tag=0):
         """
         Blocking send in ready mode
@@ -564,7 +537,7 @@ cdef class Comm:
 
     # Nonblocking calls
 
-    @send_for_nlcpy_array
+    @raise_notimpl_for_vai_buffer
     def Ibsend(self, buf, int dest, int tag=0):
         """
         Nonblocking send in buffered mode
@@ -577,7 +550,6 @@ cdef class Comm:
         request.ob_buf = smsg
         return request
 
-    @send_for_nlcpy_array
     def Issend(self, buf, int dest, int tag=0):
         """
         Nonblocking send in synchronous mode
@@ -590,7 +562,6 @@ cdef class Comm:
         request.ob_buf = smsg
         return request
 
-    @send_for_nlcpy_array
     def Irsend(self, buf, int dest, int tag=0):
         """
         Nonblocking send in ready mode
@@ -605,7 +576,7 @@ cdef class Comm:
 
     # Persistent Requests
 
-    @send_for_nlcpy_array
+    @raise_notimpl_for_vai_buffer
     def Bsend_init(self, buf, int dest, int tag=0):
         """
         Persistent request for a send in buffered mode
@@ -618,7 +589,6 @@ cdef class Comm:
         request.ob_buf = smsg
         return request
 
-    @send_for_nlcpy_array
     def Ssend_init(self, buf, int dest, int tag=0):
         """
         Persistent request for a send in synchronous mode
@@ -631,7 +601,6 @@ cdef class Comm:
         request.ob_buf = smsg
         return request
 
-    @send_for_nlcpy_array
     def Rsend_init(self, buf, int dest, int tag=0):
         """
         Persistent request for a send in ready mode
@@ -659,7 +628,6 @@ cdef class Comm:
     # Global Communication Functions
     # ------------------------------
 
-    @recv_buffer_for_nlcpy_array(arg_idx=1)
     def Bcast(self, buf, int root=0):
         """
         Broadcast a message from one process
@@ -671,7 +639,6 @@ cdef class Comm:
             m.sbuf, m.scount, m.stype,
             root, self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Gather(self, sendbuf, recvbuf, int root=0):
         """
         Gather together values from a group of processes
@@ -683,7 +650,6 @@ cdef class Comm:
             m.rbuf, m.rcount, m.rtype,
             root, self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Gatherv(self, sendbuf, recvbuf, int root=0):
         """
         Gather Vector, gather data to one process from all other
@@ -697,7 +663,6 @@ cdef class Comm:
             m.rbuf, m.rcounts, m.rdispls, m.rtype,
             root, self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Scatter(self, sendbuf, recvbuf, int root=0):
         """
         Scatter data from one process
@@ -710,7 +675,6 @@ cdef class Comm:
             m.rbuf, m.rcount, m.rtype,
             root, self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Scatterv(self, sendbuf, recvbuf, int root=0):
         """
         Scatter Vector, scatter data from one process to all other
@@ -724,7 +688,6 @@ cdef class Comm:
             m.rbuf, m.rcount,             m.rtype,
             root, self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Allgather(self, sendbuf, recvbuf):
         """
         Gather to All, gather data from all processes and
@@ -737,7 +700,6 @@ cdef class Comm:
             m.rbuf, m.rcount, m.rtype,
             self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Allgatherv(self, sendbuf, recvbuf):
         """
         Gather to All Vector, gather data from all processes and
@@ -751,7 +713,6 @@ cdef class Comm:
             m.rbuf, m.rcounts, m.rdispls, m.rtype,
             self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Alltoall(self, sendbuf, recvbuf):
         """
         All to All Scatter/Gather, send data from all to all
@@ -764,7 +725,6 @@ cdef class Comm:
             m.rbuf, m.rcount, m.rtype,
             self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Alltoallv(self, sendbuf, recvbuf):
         """
         All to All Scatter/Gather Vector, send data from all to all
@@ -778,7 +738,6 @@ cdef class Comm:
             m.rbuf, m.rcounts, m.rdispls, m.rtype,
             self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Alltoallw(self, sendbuf, recvbuf):
         """
         Generalized All-to-All communication allowing different
@@ -795,7 +754,6 @@ cdef class Comm:
     # Global Reduction Operations
     # ---------------------------
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Reduce(self, sendbuf, recvbuf, Op op=SUM, int root=0):
         """
         Reduce
@@ -806,7 +764,6 @@ cdef class Comm:
             m.sbuf, m.rbuf, m.rcount, m.rtype,
             op.ob_mpi, root, self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Allreduce(self, sendbuf, recvbuf, Op op=SUM):
         """
         All Reduce
@@ -817,7 +774,6 @@ cdef class Comm:
             m.sbuf, m.rbuf, m.rcount, m.rtype,
             op.ob_mpi, self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Reduce_scatter_block(self, sendbuf, recvbuf, Op op=SUM):
         """
         Reduce-Scatter Block (regular, non-vector version)
@@ -828,7 +784,6 @@ cdef class Comm:
             m.sbuf, m.rbuf, m.rcount, m.rtype,
             op.ob_mpi, self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Reduce_scatter(self, sendbuf, recvbuf, recvcounts=None, Op op=SUM):
         """
         Reduce-Scatter (vector version)
@@ -851,44 +806,26 @@ cdef class Comm:
         with nogil: CHKERR( MPI_Ibarrier(self.ob_mpi, &request.ob_mpi) )
         return request
 
-    @nb_recv_for_nlcpy_array(arg_idx=1)
-    def Ibcast(self, buf, int root=0, numpy_arr=None, nlcpy_arr=None):
+    def Ibcast(self, buf, int root=0):
         """
         Nonblocking Broadcast
         """
         cdef _p_msg_cco m = message_cco()
         m.for_bcast(buf, root, self.ob_mpi)
-        cdef Request request
-        if numpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arr,
-                                               nlcpy_arr=nlcpy_arr)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ibcast(
             m.sbuf, m.scount, m.stype,
             root, self.ob_mpi, &request.ob_mpi) )
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Igather(self, sendbuf, recvbuf, int root=0,
-                send_nlcpy_arr=None, send_numpy_arr=None,
-                recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Igather(self, sendbuf, recvbuf, int root=0):
         """
         Nonblocking Gather
         """
         cdef _p_msg_cco m = message_cco()
         m.for_gather(0, sendbuf, recvbuf, root, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Igather(
             m.sbuf, m.scount, m.stype,
             m.rbuf, m.rcount, m.rtype,
@@ -896,24 +833,13 @@ cdef class Comm:
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Igatherv(self, sendbuf, recvbuf, int root=0,
-                 send_nlcpy_arr=None, send_numpy_arr=None,
-                 recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Igatherv(self, sendbuf, recvbuf, int root=0):
         """
         Nonblocking Gather Vector
         """
         cdef _p_msg_cco m = message_cco()
         m.for_gather(1, sendbuf, recvbuf, root, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Igatherv(
             m.sbuf, m.scount,             m.stype,
             m.rbuf, m.rcounts, m.rdispls, m.rtype,
@@ -921,24 +847,13 @@ cdef class Comm:
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Iscatter(self, sendbuf, recvbuf, int root=0,
-                 send_nlcpy_arr=None, send_numpy_arr=None,
-                 recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Iscatter(self, sendbuf, recvbuf, int root=0):
         """
         Nonblocking Scatter
         """
         cdef _p_msg_cco m = message_cco()
         m.for_scatter(0, sendbuf, recvbuf, root, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Iscatter(
             m.sbuf, m.scount, m.stype,
             m.rbuf, m.rcount, m.rtype,
@@ -946,24 +861,13 @@ cdef class Comm:
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Iscatterv(self, sendbuf, recvbuf, int root=0,
-                  send_nlcpy_arr=None, send_numpy_arr=None,
-                  recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Iscatterv(self, sendbuf, recvbuf, int root=0):
         """
         Nonblocking Scatter Vector
         """
         cdef _p_msg_cco m = message_cco()
         m.for_scatter(1, sendbuf, recvbuf, root, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Iscatterv(
             m.sbuf, m.scounts, m.sdispls, m.stype,
             m.rbuf, m.rcount,             m.rtype,
@@ -971,24 +875,13 @@ cdef class Comm:
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Iallgather(self, sendbuf, recvbuf,
-                   send_nlcpy_arr=None, send_numpy_arr=None,
-                   recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Iallgather(self, sendbuf, recvbuf):
         """
         Nonblocking Gather to All
         """
         cdef _p_msg_cco m = message_cco()
         m.for_allgather(0, sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Iallgather(
             m.sbuf, m.scount, m.stype,
             m.rbuf, m.rcount, m.rtype,
@@ -996,48 +889,26 @@ cdef class Comm:
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Iallgatherv(self, sendbuf, recvbuf,
-                    send_nlcpy_arr=None, send_numpy_arr=None,
-                    recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Iallgatherv(self, sendbuf, recvbuf):
         """
         Nonblocking Gather to All Vector
         """
         cdef _p_msg_cco m = message_cco()
         m.for_allgather(1, sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Iallgatherv(
             m.sbuf, m.scount,             m.stype,
             m.rbuf, m.rcounts, m.rdispls, m.rtype,
             self.ob_mpi, &request.ob_mpi) )
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ialltoall(self, sendbuf, recvbuf,
-                  send_nlcpy_arr=None, send_numpy_arr=None,
-                  recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ialltoall(self, sendbuf, recvbuf):
         """
         Nonblocking All to All Scatter/Gather
         """
         cdef _p_msg_cco m = message_cco()
         m.for_alltoall(0, sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ialltoall(
             m.sbuf, m.scount, m.stype,
             m.rbuf, m.rcount, m.rtype,
@@ -1045,24 +916,13 @@ cdef class Comm:
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ialltoallv(self, sendbuf, recvbuf,
-                   send_nlcpy_arr=None, send_numpy_arr=None,
-                   recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ialltoallv(self, sendbuf, recvbuf):
         """
         Nonblocking All to All Scatter/Gather Vector
         """
         cdef _p_msg_cco m = message_cco()
         m.for_alltoall(1, sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ialltoallv(
             m.sbuf, m.scounts, m.sdispls, m.stype,
             m.rbuf, m.rcounts, m.rdispls, m.rtype,
@@ -1070,24 +930,13 @@ cdef class Comm:
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ialltoallw(self, sendbuf, recvbuf,
-                   send_nlcpy_arr=None, send_numpy_arr=None,
-                   recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ialltoallw(self, sendbuf, recvbuf):
         """
         Nonblocking Generalized All-to-All
         """
         cdef _p_msg_ccow m = message_ccow()
         m.for_alltoallw(sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ialltoallw(
             m.sbuf, m.scounts, m.sdispls, m.stypes,
             m.rbuf, m.rcounts, m.rdispls, m.rtypes,
@@ -1095,94 +944,50 @@ cdef class Comm:
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ireduce(self, sendbuf, recvbuf, Op op=SUM, int root=0,
-                send_nlcpy_arr=None, send_numpy_arr=None,
-                recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ireduce(self, sendbuf, recvbuf, Op op=SUM, int root=0):
         """
         Nonblocking Reduce
         """
         cdef _p_msg_cco m = message_cco()
         m.for_reduce(sendbuf, recvbuf, root, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ireduce(
             m.sbuf, m.rbuf, m.rcount, m.rtype,
             op.ob_mpi, root, self.ob_mpi, &request.ob_mpi) )
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Iallreduce(self, sendbuf, recvbuf, Op op=SUM,
-                   send_nlcpy_arr=None, send_numpy_arr=None,
-                   recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Iallreduce(self, sendbuf, recvbuf, Op op=SUM):
         """
         Nonblocking All Reduce
         """
         cdef _p_msg_cco m = message_cco()
         m.for_allreduce(sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Iallreduce(
             m.sbuf, m.rbuf, m.rcount, m.rtype,
             op.ob_mpi, self.ob_mpi, &request.ob_mpi) )
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ireduce_scatter_block(self, sendbuf, recvbuf, Op op=SUM,
-                              send_nlcpy_arr=None, send_numpy_arr=None,
-                              recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ireduce_scatter_block(self, sendbuf, recvbuf, Op op=SUM):
         """
         Nonblocking Reduce-Scatter Block (regular, non-vector version)
         """
         cdef _p_msg_cco m = message_cco()
         m.for_reduce_scatter_block(sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ireduce_scatter_block(
             m.sbuf, m.rbuf, m.rcount, m.rtype,
             op.ob_mpi, self.ob_mpi, &request.ob_mpi) )
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ireduce_scatter(self, sendbuf, recvbuf, recvcounts=None, Op op=SUM,
-                        send_nlcpy_arr=None, send_numpy_arr=None,
-                        recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ireduce_scatter(self, sendbuf, recvbuf, recvcounts=None, Op op=SUM,):
         """
         Nonblocking Reduce-Scatter (vector version)
         """
         cdef _p_msg_cco m = message_cco()
         m.for_reduce_scatter(sendbuf, recvbuf,
                              recvcounts, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ireduce_scatter(
             m.sbuf, m.rbuf, m.rcounts, m.rtype,
             op.ob_mpi, self.ob_mpi, &request.ob_mpi) )
@@ -1405,25 +1210,22 @@ cdef class Comm:
     # Python Communication
     # --------------------
     #
-    @send_for_nlcpy_array
     def send(self, obj, int dest, int tag=0):
         """Send"""
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_send(obj, dest, tag, comm)
     #
-    @send_for_nlcpy_array
+    @raise_notimpl_for_vai_buffer
     def bsend(self, obj, int dest, int tag=0):
         """Send in buffered mode"""
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_bsend(obj, dest, tag, comm)
     #
-    @send_for_nlcpy_array
     def ssend(self, obj, int dest, int tag=0):
         """Send in synchronous mode"""
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_ssend(obj, dest, tag, comm)
     #
-    @recv_for_nlcpy_array
     def recv(self, buf=None, int source=ANY_SOURCE, int tag=ANY_TAG,
              Status status=None):
         """Receive"""
@@ -1431,8 +1233,6 @@ cdef class Comm:
         cdef MPI_Status *statusp = arg_Status(status)
         return PyMPI_recv(buf, source, tag, comm, statusp)
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def sendrecv(self, sendobj, int dest, int sendtag=0,
                  recvbuf=None, int source=ANY_SOURCE, int recvtag=ANY_TAG,
                  Status status=None):
@@ -1443,7 +1243,6 @@ cdef class Comm:
                               recvbuf, source, recvtag,
                               comm, statusp)
     #
-    @send_for_nlcpy_array
     def isend(self, obj, int dest, int tag=0):
         """Nonblocking send"""
         cdef MPI_Comm comm = self.ob_mpi
@@ -1451,7 +1250,7 @@ cdef class Comm:
         request.ob_buf = PyMPI_isend(obj, dest, tag, comm, &request.ob_mpi)
         return request
     #
-    @send_for_nlcpy_array
+    @raise_notimpl_for_vai_buffer
     def ibsend(self, obj, int dest, int tag=0):
         """Nonblocking send in buffered mode"""
         cdef MPI_Comm comm = self.ob_mpi
@@ -1459,7 +1258,6 @@ cdef class Comm:
         request.ob_buf = PyMPI_ibsend(obj, dest, tag, comm, &request.ob_mpi)
         return request
     #
-    @send_for_nlcpy_array
     def issend(self, obj, int dest, int tag=0):
         """Nonblocking send in synchronous mode"""
         cdef MPI_Comm comm = self.ob_mpi
@@ -1467,18 +1265,10 @@ cdef class Comm:
         request.ob_buf = PyMPI_issend(obj, dest, tag, comm, &request.ob_mpi)
         return request
     #
-    @nb_recv_for_nlcpy_array(arg_idx=1)
-    def irecv(self, buf=None, int source=ANY_SOURCE, int tag=ANY_TAG,
-              numpy_arr=None, nlcpy_arr=None):
+    def irecv(self, buf=None, int source=ANY_SOURCE, int tag=ANY_TAG):
         """Nonblocking receive"""
         cdef MPI_Comm comm = self.ob_mpi
-        cdef Request request
-        if numpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arr,
-                                               nlcpy_arr=nlcpy_arr)
+        cdef Request request = <Request>Request.__new__(Request)
         request.ob_buf = PyMPI_irecv(buf, source, tag, comm, &request.ob_mpi)
         return request
     #
@@ -1523,51 +1313,37 @@ cdef class Comm:
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_barrier(comm)
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def bcast(self, obj, int root=0):
         """Broadcast"""
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_bcast(obj, root, comm)
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def gather(self, sendobj, int root=0):
         """Gather"""
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_gather(sendobj, root, comm)
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def scatter(self, sendobj, int root=0):
         """Scatter"""
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_scatter(sendobj, root, comm)
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def allgather(self, sendobj):
         """Gather to All"""
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_allgather(sendobj, comm)
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def alltoall(self, sendobj):
         """All to All Scatter/Gather"""
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_alltoall(sendobj, comm)
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def reduce(self, sendobj, op=SUM, int root=0):
         """Reduce"""
         if op is None: op = SUM
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_reduce(sendobj, op, root, comm)
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def allreduce(self, sendobj, op=SUM):
         """Reduce to All"""
         if op is None: op = SUM
@@ -1731,7 +1507,6 @@ cdef class Intracomm(Comm):
 
     # Inclusive Scan
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Scan(self, sendbuf, recvbuf, Op op=SUM):
         """
         Inclusive Scan
@@ -1744,7 +1519,6 @@ cdef class Intracomm(Comm):
 
     # Exclusive Scan
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Exscan(self, sendbuf, recvbuf, Op op=SUM):
         """
         Exclusive Scan
@@ -1757,47 +1531,25 @@ cdef class Intracomm(Comm):
 
     # Nonblocking
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Iscan(self, sendbuf, recvbuf, Op op=SUM,
-              send_nlcpy_arr=None, send_numpy_arr=None,
-              recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Iscan(self, sendbuf, recvbuf, Op op=SUM ):
         """
         Inclusive Scan
         """
         cdef _p_msg_cco m = message_cco()
         m.for_scan(sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Iscan(
             m.sbuf, m.rbuf, m.rcount, m.rtype,
             op.ob_mpi, self.ob_mpi, &request.ob_mpi) )
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Iexscan(self, sendbuf, recvbuf, Op op=SUM,
-                send_nlcpy_arr=None, send_numpy_arr=None,
-                recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Iexscan(self, sendbuf, recvbuf, Op op=SUM):
         """
         Inclusive Scan
         """
         cdef _p_msg_cco m = message_cco()
         m.for_exscan(sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Iexscan(
             m.sbuf, m.rbuf, m.rcount, m.rtype,
             op.ob_mpi, self.ob_mpi, &request.ob_mpi) )
@@ -1805,16 +1557,12 @@ cdef class Intracomm(Comm):
 
     # Python Communication
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def scan(self, sendobj, op=SUM):
         """Inclusive Scan"""
         if op is None: op = SUM
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_scan(sendobj, op, comm)
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def exscan(self, sendobj, op=SUM):
         """Exclusive Scan"""
         if op is None: op = SUM
@@ -2013,7 +1761,6 @@ cdef class Topocomm(Intracomm):
     # Neighborhood Collectives
     # ------------------------
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Neighbor_allgather(self, sendbuf, recvbuf):
         """
         Neighbor Gather to All
@@ -2025,7 +1772,6 @@ cdef class Topocomm(Intracomm):
             m.rbuf, m.rcount, m.rtype,
             self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Neighbor_allgatherv(self, sendbuf, recvbuf):
         """
         Neighbor Gather to All Vector
@@ -2037,7 +1783,6 @@ cdef class Topocomm(Intracomm):
             m.rbuf, m.rcounts, m.rdispls, m.rtype,
             self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Neighbor_alltoall(self, sendbuf, recvbuf):
         """
         Neighbor All-to-All
@@ -2049,7 +1794,6 @@ cdef class Topocomm(Intracomm):
             m.rbuf, m.rcount, m.rtype,
             self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Neighbor_alltoallv(self, sendbuf, recvbuf):
         """
         Neighbor All-to-All Vector
@@ -2061,7 +1805,6 @@ cdef class Topocomm(Intracomm):
             m.rbuf, m.rcounts, m.rdispls, m.rtype,
             self.ob_mpi) )
 
-    @sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
     def Neighbor_alltoallw(self, sendbuf, recvbuf):
         """
         Neighbor All-to-All Generalized
@@ -2076,24 +1819,13 @@ cdef class Topocomm(Intracomm):
     # Nonblocking Neighborhood Collectives
     # ------------------------------------
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ineighbor_allgather(self, sendbuf, recvbuf,
-                            send_nlcpy_arr=None, send_numpy_arr=None,
-                            recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ineighbor_allgather(self, sendbuf, recvbuf):
         """
         Nonblocking Neighbor Gather to All
         """
         cdef _p_msg_cco m = message_cco()
         m.for_neighbor_allgather(0, sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ineighbor_allgather(
             m.sbuf, m.scount, m.stype,
             m.rbuf, m.rcount, m.rtype,
@@ -2101,24 +1833,13 @@ cdef class Topocomm(Intracomm):
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ineighbor_allgatherv(self, sendbuf, recvbuf,
-                             send_nlcpy_arr=None, send_numpy_arr=None,
-                             recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ineighbor_allgatherv(self, sendbuf, recvbuf):
         """
         Nonblocking Neighbor Gather to All Vector
         """
         cdef _p_msg_cco m = message_cco()
         m.for_neighbor_allgather(1, sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ineighbor_allgatherv(
             m.sbuf, m.scount, m.stype,
             m.rbuf, m.rcounts, m.rdispls, m.rtype,
@@ -2126,24 +1847,13 @@ cdef class Topocomm(Intracomm):
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ineighbor_alltoall(self, sendbuf, recvbuf,
-                           send_nlcpy_arr=None, send_numpy_arr=None,
-                           recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ineighbor_alltoall(self, sendbuf, recvbuf):
         """
         Nonblocking Neighbor All-to-All
         """
         cdef _p_msg_cco m = message_cco()
         m.for_neighbor_alltoall(0, sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ineighbor_alltoall(
             m.sbuf, m.scount, m.stype,
             m.rbuf, m.rcount, m.rtype,
@@ -2151,24 +1861,13 @@ cdef class Topocomm(Intracomm):
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ineighbor_alltoallv(self, sendbuf, recvbuf,
-                            send_nlcpy_arr=None, send_numpy_arr=None,
-                            recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ineighbor_alltoallv(self, sendbuf, recvbuf):
         """
         Nonblocking Neighbor All-to-All Vector
         """
         cdef _p_msg_cco m = message_cco()
         m.for_neighbor_alltoall(1, sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ineighbor_alltoallv(
             m.sbuf, m.scounts, m.sdispls, m.stype,
             m.rbuf, m.rcounts, m.rdispls, m.rtype,
@@ -2176,24 +1875,13 @@ cdef class Topocomm(Intracomm):
         request.ob_buf = m
         return request
 
-    @nb_sendrecv_buffer_for_nlcpy_array(arg_idx=(1, 2))
-    def Ineighbor_alltoallw(self, sendbuf, recvbuf,
-                            send_nlcpy_arr=None, send_numpy_arr=None,
-                            recv_nlcpy_arr=None, recv_numpy_arr=None):
+    def Ineighbor_alltoallw(self, sendbuf, recvbuf):
         """
         Nonblocking Neighbor All-to-All Generalized
         """
         cdef _p_msg_ccow m = message_ccow()
         m.for_neighbor_alltoallw(sendbuf, recvbuf, self.ob_mpi)
-        cdef Request request
-        if send_nlcpy_arr is None and recv_nlcpy_arr is None:
-            request = <Request>Request.__new__(Request)
-        else:
-            numpy_arrays=[send_numpy_arr, recv_numpy_arr]
-            nlcpy_arrays=[send_nlcpy_arr, recv_nlcpy_arr]
-            request = <Request>Request.__new__(Request,
-                                               numpy_arr=numpy_arrays,
-                                               nlcpy_arr=nlcpy_arrays)
+        cdef Request request = <Request>Request.__new__(Request)
         with nogil: CHKERR( MPI_Ineighbor_alltoallw(
             m.sbuf, m.scounts, m.sdisplsA, m.stypes,
             m.rbuf, m.rcounts, m.rdisplsA, m.rtypes,
@@ -2203,15 +1891,11 @@ cdef class Topocomm(Intracomm):
 
     # Python Communication
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def neighbor_allgather(self, sendobj):
         """Neighbor Gather to All"""
         cdef MPI_Comm comm = self.ob_mpi
         return PyMPI_neighbor_allgather(sendobj, comm)
     #
-    @recv_for_nlcpy_array
-    @send_for_nlcpy_array
     def neighbor_alltoall(self, sendobj):
         """Neighbor All to All Scatter/Gather"""
         cdef MPI_Comm comm = self.ob_mpi
@@ -2613,8 +2297,7 @@ COMM_WORLD = __COMM_WORLD__  #: World communicator handle
 BSEND_OVERHEAD = MPI_BSEND_OVERHEAD
 #: Upper bound of memory overhead for sending in buffered mode
 
-
-@send_for_nlcpy_array
+@raise_notimpl_for_vai_buffer
 def Attach_buffer(buf):
     """
     Attach a user-provided buffer for

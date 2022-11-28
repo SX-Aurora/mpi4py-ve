@@ -17,7 +17,12 @@ class BaseTestIO(object):
         fname = None
         if comm.Get_rank() == 0:
             if not os.path.exists(self.tmpname):
-                os.mkdir(self.tmpname)
+                try:
+                    os.mkdir(self.tmpname)
+                except OSError as e:
+                    if e.errno != 17: # not File exists
+                        raise
+                    pass
             fd, fname = tempfile.mkstemp(prefix=self.prefix,dir=self.tmpname)
             os.close(fd)
         fname = comm.bcast(fname, 0)
@@ -112,7 +117,7 @@ class BaseTestIO(object):
                             self.assertEqual(value, 42)
                         self.assertEqual(rbuf[-1], -1)
                     comm.Barrier()
-    
+
     def testIReadIWrite(self):
         comm = self.COMM
         size = comm.Get_size()
@@ -228,10 +233,10 @@ class BaseTestIO(object):
             for array in arrayimpl.ArrayTypes:
                 for typecode in arrayimpl.TypeMap:
                     etype = arrayimpl.TypeMap[typecode]
-                    fh.Set_size(0)
-                    fh.Set_view(0, etype)
                     count = 13
                     wbuf = array(42, typecode, count)
+                    fh.Set_size(0)
+                    fh.Set_view(rank*wbuf.itemsize*count, etype)
                     fh.Iwrite_at_all(count*rank, wbuf.as_raw()).Wait()
                     fh.Sync()
                     comm.Barrier()
@@ -306,10 +311,10 @@ class BaseTestIO(object):
             for array in arrayimpl.ArrayTypes:
                 for typecode in arrayimpl.TypeMap:
                     etype = arrayimpl.TypeMap[typecode]
-                    fh.Set_size(0)
-                    fh.Set_view(0, etype)
                     count = 13
                     wbuf = array(42, typecode, count)
+                    fh.Set_size(0)
+                    fh.Set_view(rank*count*wbuf.itemsize, etype)
                     fh.Seek(count*rank, MPI.SEEK_SET)
                     fh.Iwrite_all(wbuf.as_raw()).Wait()
                     fh.Sync()
@@ -352,7 +357,7 @@ class BaseTestIO(object):
                     self.assertEqual(value, 42)
                 self.assertEqual(rbuf[-1], -1)
                 comm.Barrier()
- 
+
     def testReadWriteOrdered(self):
         comm = self.COMM
         size = comm.Get_size()

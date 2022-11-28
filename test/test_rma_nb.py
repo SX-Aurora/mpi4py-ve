@@ -45,51 +45,57 @@ class BaseTestRMA(object):
     def testPutGet(self):
         group = self.WIN.Get_group()
         size = group.Get_size()
+        rank = group.Get_rank()
         group.Free()
         for array in arrayimpl.ArrayTypes:
             for typecode in arrayimpl.TypeMap:
+                if typecode in 'FDG': continue
+                if rank != 0: continue
                 for count in range(self.COUNT_MIN, 10):
-                    for rank in range(size):
-                        sbuf = array([rank]*count, typecode)
+                    for lrank in range(size):
+                        sbuf = array([lrank]*count, typecode)
                         rbuf = array(-1, typecode, count+1)
-                        self.WIN.Fence()
-                        self.WIN.Lock(rank)
-                        r = self.WIN.Rput(sbuf.as_mpi(), rank)
+                        #self.WIN.Fence()
+                        self.WIN.Lock(lrank)
+                        r = self.WIN.Rput(sbuf.as_mpi(), lrank)
                         r.Wait()
-                        self.WIN.Flush(rank)
-                        r = self.WIN.Rget(rbuf.as_mpi_c(count), rank)
+                        self.WIN.Flush(lrank)
+                        r = self.WIN.Rget(rbuf.as_mpi_c(count), lrank)
                         r.Wait()
-                        self.WIN.Unlock(rank)
+                        self.WIN.Unlock(lrank)
                         for i in range(count):
-                            self.assertEqual(sbuf[i], rank)
-                            self.assertEqual(rbuf[i], rank)
-                        self.assertEqual(rbuf[-1], -1)
+                            self.assertEqual(sbuf[i], lrank)
+                            self.assertEqual(rbuf[i], lrank)
+                        self.assertEqual(int(rbuf[-1]), -1)
 
     @unittest.skipMPI('openmpi(>=1.10.0,<1.11.0)')
     def testAccumulate(self):
         group = self.WIN.Get_group()
         size = group.Get_size()
+        rank = group.Get_rank()
         group.Free()
         for array in arrayimpl.ArrayTypes:
             for typecode in arrayimpl.TypeMap:
+                if typecode in 'FDG': continue
+                if rank != 0: continue
                 for count in range(self.COUNT_MIN, 10):
-                    for rank in range(size):
+                    for lrank in range(size):
                         ones = array([1]*count, typecode)
                         sbuf = array(range(count), typecode)
                         rbuf = array(-1, typecode, count+1)
                         for op in (MPI.SUM, MPI.PROD,
                                    MPI.MAX, MPI.MIN,
                                    MPI.REPLACE):
-                            self.WIN.Lock(rank)
-                            self.WIN.Put(ones.as_mpi(), rank)
-                            self.WIN.Flush(rank)
+                            self.WIN.Lock(lrank)
+                            self.WIN.Put(ones.as_mpi(), lrank)
+                            self.WIN.Flush(lrank)
                             r = self.WIN.Raccumulate(sbuf.as_mpi(),
-                                                     rank, op=op)
+                                                     lrank, op=op)
                             r.Wait()
-                            self.WIN.Flush(rank)
-                            r = self.WIN.Rget(rbuf.as_mpi_c(count), rank)
+                            self.WIN.Flush(lrank)
+                            r = self.WIN.Rget(rbuf.as_mpi_c(count), lrank)
                             r.Wait()
-                            self.WIN.Unlock(rank)
+                            self.WIN.Unlock(lrank)
                             #
                             for i in range(count):
                                 self.assertEqual(sbuf[i], i)
@@ -100,11 +106,14 @@ class BaseTestRMA(object):
     def testGetAccumulate(self):
         group = self.WIN.Get_group()
         size = group.Get_size()
+        rank = group.Get_rank()
         group.Free()
         for array in arrayimpl.ArrayTypes:
             for typecode in arrayimpl.TypeMap:
+                if typecode in 'FDG': continue
+                if rank != 0: continue
                 for count in range(self.COUNT_MIN, 10):
-                    for rank in range(size):
+                    for lrank in range(size):
                         ones = array([1]*count, typecode)
                         sbuf = array(range(count), typecode)
                         rbuf = array(-1, typecode, count+1)
@@ -112,17 +121,17 @@ class BaseTestRMA(object):
                         for op in (MPI.SUM, MPI.PROD,
                                    MPI.MAX, MPI.MIN,
                                    MPI.REPLACE, MPI.NO_OP):
-                            self.WIN.Lock(rank)
-                            self.WIN.Put(ones.as_mpi(), rank)
-                            self.WIN.Flush(rank)
+                            self.WIN.Lock(lrank)
+                            self.WIN.Put(ones.as_mpi(), lrank)
+                            self.WIN.Flush(lrank)
                             r = self.WIN.Rget_accumulate(sbuf.as_mpi(),
                                                          rbuf.as_mpi_c(count),
-                                                         rank, op=op)
+                                                         lrank, op=op)
                             r.Wait()
-                            self.WIN.Flush(rank)
-                            r = self.WIN.Rget(gbuf.as_mpi_c(count), rank)
+                            self.WIN.Flush(lrank)
+                            r = self.WIN.Rget(gbuf.as_mpi_c(count), lrank)
                             r.Wait()
-                            self.WIN.Unlock(rank)
+                            self.WIN.Unlock(lrank)
                             #
                             for i in range(count):
                                 self.assertEqual(sbuf[i], i)
@@ -175,7 +184,6 @@ class TestRMASelf(BaseTestRMA, unittest.TestCase):
 @unittest.skipMPI('MPI(<3.0)')
 @unittest.skipMPI('openmpi(<1.8.1)')
 @unittest.skipMPI('MPICH2(<1.5.0)')
-@unittest.skipIf(multihost.IS_MULTI_HOST, 'necmpi-multi-host')
 class TestRMAWorld(BaseTestRMA, unittest.TestCase):
     COMM = MPI.COMM_WORLD
 

@@ -31,6 +31,9 @@ class BaseTestP2PBuf_s(object):
                     sbuf = array( s, typecode, s)
                     # rbuf = array(-1, typecode, s)
                     mem  = array( 0, typecode, 2*(s+MPI.BSEND_OVERHEAD)).as_raw()
+                    # @unittest.skip('necmpi')
+                    if hasattr(mem, '__ve_array_interface__'):
+                        continue
                     if size == 1:
                         MPI.Attach_buffer(mem)
                         rbuf = sbuf

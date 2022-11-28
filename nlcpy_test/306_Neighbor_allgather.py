@@ -2,14 +2,15 @@ from mpi4pyve import MPI
 import numpy as np
 import nlcpy as vp
 
-comm = MPI.COMM_WORLD.Create_cart((3,))
+
+comm = MPI.COMM_WORLD.Create_cart((MPI.COMM_WORLD.Get_size(),))
 size = comm.Get_size()
 rank = comm.Get_rank()
 
 print("rank = ",rank)
 
 x = vp.array([(rank+1)**2 ,rank], dtype=int)
-y = vp.empty((2, 2), dtype=int)
+y = vp.zeros((2, 2), dtype=int)
 print("x       = ",x)
 print("type(x) = ",type(x))
 print("y       = ",y)

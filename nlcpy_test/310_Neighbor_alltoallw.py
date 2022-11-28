@@ -3,7 +3,7 @@ import numpy as np
 import nlcpy as vp
 
 dim = 3
-comm = MPI.COMM_WORLD.Create_cart((dim,))
+comm = MPI.COMM_WORLD.Create_cart((MPI.COMM_WORLD.Get_size(),))
 size = comm.Get_size()
 rank = comm.Get_rank()
 

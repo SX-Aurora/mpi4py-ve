@@ -22,7 +22,7 @@ This package supports:
   interface* (NLCPy arrays, builtin bytes/string/array objects)
 
   + point-to-point (blocking/nonbloking/persistent send & receive)
-  + collective (broadcast, block/vector scatter & gather, reductions)
+  + collective (broadcast, block scatter & gather, reductions, vector scatter & gather)
 
 * Process groups and communication domains
 
@@ -35,13 +35,13 @@ This package supports:
   + blocking/nonbloking & collective/noncollective
   + individual/shared file pointers & explicit offset
 
-This package has NOT supported the following functions yet:
-
 * One-sided operations
 
   + remote memory access (put, get, accumulate)
   + passive target syncronization (start/complete & post/wait)
   + active target syncronization (lock & unlock)
+
+This package has NOT supported the following functions yet:
 
 * Dynamic process management
 
@@ -50,8 +50,8 @@ This package has NOT supported the following functions yet:
   + name publishing & lookup
 
 
-List of Supprted Functions
---------------------------
+List of Supported Functions
+---------------------------
 
 A list of supported functions is shown below.
 
@@ -67,8 +67,6 @@ Alltoall              All to All Scatter/Gather, send data from all to all proce
 Alltoallv             All to All Scatter/Gather Vector, send data from all to all processes in a group providing different amount of data and displacements.
 Alltoallw             Generalized All-to-All communication allowing different counts, displacements and datatypes for each partner.
 Bcast                 Broadcast a message from one process to all other processes in a group.
-Bsend                 Blocking send in buffered mode.
-Bsend_init            Persistent request for a send in buffered mode.
 Gather                Gather together values from a group of processes.
 Gatherv               Gather Vector, gather data to one process from all other processes in a group providing different amount of data and displacements at the receiving sides.
 Iallgather            Nonblocking Gather to All.
@@ -78,7 +76,6 @@ Ialltoall             Nonblocking All to All Scatter/Gather.
 Ialltoallv            Nonblocking All to All Scatter/Gather Vector.
 Ialltoallw            Nonblocking Generalized All-to-All.
 Ibcast                Nonblocking Broadcast.
-Ibsend                Nonblocking send in buffered mode.
 Igather               Nonblocking Gather.
 Igatherv              Nonblocking Gather Vector.
 Irecv                 Nonblocking receive.
@@ -109,9 +106,7 @@ allgather             Gather to All.
 allreduce             Reduce to All.
 alltoall              All to All Scatter/Gather.
 bcast                 Broadcast.
-bsend                 Send in buffered mode.
 gather                Gather.
-ibsend                Nonblocking send in buffered mode.
 irecv                 Nonblocking receive.
 isend                 Nonblocking send.
 issend                Nonblocking send in synchronous mode.
@@ -155,14 +150,6 @@ neighbor_allgather    Neighbor Gather to All.
 neighbor_alltoall     Neighbor All to All Scatter/Gather.
 ===================== ===============================================================================================================================================================
 
-* MPI (Miscellanea)
-
-===================== ===============================================================================================================================================================
-Name                  Summary
-===================== ===============================================================================================================================================================
-Attach_buffer         Attach a user-provided buffer for sending in buffered mode.
-===================== ===============================================================================================================================================================
-
 * MPI.Request Class (Request handle)
 
 ===================== ===============================================================================================================================================================
@@ -188,23 +175,13 @@ irecv                 Nonblocking receive of matched message.
 recv                  Blocking receive of matched message.
 ===================== ===============================================================================================================================================================
 
-* MPI.Op Class (Ancillay / Operation object)
-
-===================== ===============================================================================================================================================================
-Name                  Summary
-===================== ===============================================================================================================================================================
-Reduce_local          Apply a reduction operator to local data.  
-===================== ===============================================================================================================================================================
-
 * MPI.Datatype Class (Ancillay / Datatype object)
 
 ===================== ===============================================================================================================================================================
 Name                  Summary
 ===================== ===============================================================================================================================================================
 Pack                  Pack into contiguous memory according to datatype.
-Pack_external         Pack into contiguous memory according to datatype, using a portable data representation (external32).
 Unpack                Unpack from contiguous memory according to datatype.
-Unpack_external       Unpack from contiguous memory according to datatype, using a portable data representation (external32).
 ===================== ===============================================================================================================================================================
 
 * MPI.File Class (Parallel input/output)
@@ -248,26 +225,6 @@ Write_ordered_end     Complete a split collective write using shared file pointe
 Write_shared          Write using shared file pointer.
 ===================== ===============================================================================================================================================================
 
-List of Unsupprted Functions
-----------------------------
-
-The current version of *mpi4py-ve* does not support the following functions. Please note that "NotImplementedError" occurs if your Python script calls them.
-
-* MPI.Comm Class (Communicator)
-
-===================== ===============================================================================================================================================================
-Name                  Summary
-===================== ===============================================================================================================================================================
-Accept                Accept a request to form a new intercommunicator.
-Connect               Make a request to form a new intercommunicator.
-Close_port            Close a port.
-Join                  Create a intercommunicator by joining two processes connected by a socket.
-Lookup_name           Lookup a port name given a service name.
-Open_port             Return an address that can be used to establish connections between groups of MPI processes.
-Publish_name          Publish a service name.
-Unpublish_name        Unpublish a service name.
-===================== ===============================================================================================================================================================
-
 * MPI.Win Class (One-sided operations) 
 
 ===================== ===============================================================================================================================================================
@@ -283,6 +240,93 @@ Raccumulate           Fetch-and-accumulate data into the target process.
 Rget                  Get data from a memory window on a remote process.
 Rget_accumulate       Accumulate data into the target process using remote memory access.
 Rput                  Put data into a memory window on a remote process.
+===================== ===============================================================================================================================================================
+
+List of mpi4py-ve Original Functions
+------------------------------------
+
+* veo (VE Offloading operations) 
+
++-------------------------------+-----------------------------------------------------------------------------------------------------+
+| Name                          | Summary                                                                                             |
++===============================+=====================================================================================================+
+| alloc_hmem(proc_handle,size)  | Allocate a VE memory buffer or a VH memory buffer which users can use them as heterogeneous memory. | 
+|                               |                                                                                                     |
+|                               | Parameters:                                                                                         |
+|                               |     proc_handle: pointer                                                                            |
+|                               |         VEO process handle                                                                          |
+|                               |     size: int                                                                                       |
+|                               |         size in bytes                                                                               |
+|                               |                                                                                                     |
+|                               | Returns:                                                                                            |
+|                               |     addr: int                                                                                       |
+|                               |         VEMVA address with the identifier                                                           |
++-------------------------------+-----------------------------------------------------------------------------------------------------+
+| free_hmem(addr)               | Free a VE memory buffer.                                                                            |
+|                               |                                                                                                     |
+|                               | Parameters:                                                                                         |
+|                               |     addr: int                                                                                       |
+|                               |     VEMVA address                                                                                   |
++-------------------------------+-----------------------------------------------------------------------------------------------------+
+
+List of Unsupported Functions
+-----------------------------
+
+The current version of *mpi4py-ve* does not support the following functions. Please note that "NotImplementedError" occurs if your Python script calls them.
+
+* MPI.Comm Class (Communicator)
+
+===================== ===============================================================================================================================================================
+Name                  Summary
+===================== ===============================================================================================================================================================
+Bsend                 Blocking send in buffered mode.
+Bsend_init            Persistent request for a send in buffered mode.
+Ibsend                Nonblocking send in buffered mode.
+bsend                 Send in buffered mode.
+ibsend                Nonblocking send in buffered mode.
+Accept                Accept a request to form a new intercommunicator.
+Connect               Make a request to form a new intercommunicator.
+Close_port            Close a port.
+Join                  Create a intercommunicator by joining two processes connected by a socket.
+Lookup_name           Lookup a port name given a service name.
+Open_port             Return an address that can be used to establish connections between groups of MPI processes.
+Publish_name          Publish a service name.
+Unpublish_name        Unpublish a service name.
+===================== ===============================================================================================================================================================
+
+* MPI (Miscellanea)
+
+===================== ===============================================================================================================================================================
+Name                  Summary
+===================== ===============================================================================================================================================================
+Attach_buffer         Attach a user-provided buffer for sending in buffered mode.
+===================== ===============================================================================================================================================================
+
+* MPI.Op Class (Ancillay / Operation object)
+
+===================== ===============================================================================================================================================================
+Name                  Summary
+===================== ===============================================================================================================================================================
+Reduce_local          Apply a reduction operator to local data.  
+===================== ===============================================================================================================================================================
+
+* MPI.Datatype Class (Ancillay / Datatype object)
+
+===================== ===============================================================================================================================================================
+Name                  Summary
+===================== ===============================================================================================================================================================
+Pack_external         Pack into contiguous memory according to datatype, using a portable data representation (external32).
+Unpack_external       Unpack from contiguous memory according to datatype, using a portable data representation (external32).
+===================== ===============================================================================================================================================================
+
+* mpi4pyve.futures package ( MPIPoolExecutor / MPICommExecutor)
+
+===================== ===============================================================================================================================================================
+Name                  Summary
+===================== ===============================================================================================================================================================
+MPIPoolExecutor       The MPIPoolExecutor class uses a pool of MPI processes to execute calls asynchronously. 
+MPICommExecutor       Context manager for MPIPoolExecutor.
+                      This context manager splits a MPI (intra) communicator comm in two disjoint sets: a single master process and the remaining worker processes. 
 ===================== ===============================================================================================================================================================
 
 Exception Handling
@@ -306,7 +350,7 @@ Assume this code is stored in a standard Python script file and run with mpirun 
 
 ::
 
-    $ mpirun -vh -np 2 $(which python) ZeroDivisionError.py
+    $ mpirun -veo -np 2 $(which python) ZeroDivisionError.py
 
 Process 0 raises **ZeroDivisionError** exception before performing a send call to process 1. As the exception is not handled, the Python interpreter running in process 0 will proceed to exit with non-zero status. However, as *mpi4py-ve* installed a finalizer hook to call *MPI_Finalize()* before exit, process 0 will block waiting for other processes to also enter the *MPI_Finalize()* call. Meanwhile, process 1 will block waiting for a message to arrive from process 0, thus never reaching to *MPI_Finalize()*. The whole MPI execution environment is irremediably in a deadlock state.
 
@@ -314,7 +358,7 @@ To alleviate this issue, *mpi4py-ve* offers a simple, alternative command line e
 
     ::
 
-    $ mpirun -vh -np 2 $(which python) -m mpi4pyve ZeroDivisionError.py
+    $ mpirun -veo -np 2 $(which python) -m mpi4pyve ZeroDivisionError.py
 
 
 This is a mimic of the option **-m mpi4py** described in the `mpi4py manual (mpi4py.run) <https://mpi4py.readthedocs.io/en/stable/mpi4py.run.html>`_.

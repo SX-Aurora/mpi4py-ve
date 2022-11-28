@@ -10,7 +10,7 @@ root = 0
 print("rank = ",rank)
 
 x = vp.array([(rank+1)**2 , rank], dtype=int)
-y = vp.empty(2, dtype=int)
+y = vp.zeros(2, dtype=int)
 
 print("x       = ",x)
 print("type(x) = ",type(x))

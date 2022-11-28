@@ -15,7 +15,7 @@ if rank == root:
 else:
     x = None
 
-y = vp.empty(3, dtype=int)
+y = vp.zeros(3, dtype=int)
 
 
 print("x       = ",x)

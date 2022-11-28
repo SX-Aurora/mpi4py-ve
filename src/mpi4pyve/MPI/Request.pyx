@@ -53,59 +53,13 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-def _replace_nlcpy_to_numpy(args):
-    _type = type(args)
-    _args = list(args)
-    for i, arg in enumerate(_args):
-        if isinstance(arg, nlcpy.core.core.ndarray):
-            _args[i] = numpy.asarray(arg)
-        elif isinstance(arg, (list, tuple)):
-            _args[i] = _replace_nlcpy_to_numpy(arg)
-    return _type(_args)
-
-
-def _undo_numpy_to_nlcpy(args):
-    _type = type(args)
-    _args = list(args)
-    for i, arg in enumerate(_args):
-        if isinstance(arg, numpy.ndarray):
-            _args[i] = nlcpy.asarray(arg)
-        elif isinstance(arg, (list, tuple)):
-            _args[i] = _undo_numpy_to_nlcpy(arg)
-    return _type(_args)
-
-
-cdef wait_for_nlcpy_array(wait_func):
-    def _get_nlcpy_array_wrapper(*args, **kwargs):
-        result = wait_func(*args, **kwargs)
-        if isinstance(result, (list, tuple)):
-            result = _undo_numpy_to_nlcpy(result)
-        elif isinstance(result, numpy.ndarray):
-            result = nlcpy.asarray(result)
-        return result
-    return _get_nlcpy_array_wrapper
-
-
-def _get_numpy_to_nlcpy(args):
-    if isinstance(args, (list, tuple)):
-        return _undo_numpy_to_nlcpy(args)
-    elif isinstance(args, numpy.ndarray):
-        return nlcpy.asarray(args)
-    else:
-        return args
-
-
 cdef class Request:
 
     """
     Request
     """
 
-    def __cinit__(self, Request request=None, numpy_arr=None, nlcpy_arr=None):
-        if numpy_arr is not None:
-            self.numpy_arr = numpy_arr
-            self.nlcpy_arr = nlcpy_arr
-
+    def __cinit__(self, Request request=None):
         self.ob_mpi = MPI_REQUEST_NULL
         if request is None: return
         self.ob_mpi = request.ob_mpi
@@ -130,16 +84,6 @@ cdef class Request:
     # Completion Operations
     # ---------------------
 
-    def _trans_nlcpy_array(self):
-        if self.numpy_arr is not None:
-            if not isinstance(self.numpy_arr, list):
-                self.nlcpy_arr[:] = self.numpy_arr
-            else:
-                for i in range(0, len(self.numpy_arr)):
-                    if not self.numpy_arr[i] is None:
-                        self.nlcpy_arr[i][:] = self.numpy_arr[i]
-        return
-
     def Wait(self, Status status=None):
         """
         Wait for a send or receive to complete
@@ -150,8 +94,6 @@ cdef class Request:
             &self.ob_mpi, statusp) )
         if self.ob_mpi == MPI_REQUEST_NULL:
             self.ob_buf = None
-
-        self._trans_nlcpy_array()
         return True
 
     def Test(self, Status status=None):
@@ -164,8 +106,6 @@ cdef class Request:
             &self.ob_mpi, &flag, statusp) )
         if self.ob_mpi == MPI_REQUEST_NULL:
             self.ob_buf = None
-
-        self._trans_nlcpy_array()
         return <bint>flag
 
     def Free(self):
@@ -202,8 +142,6 @@ cdef class Request:
             with nogil: CHKERR( MPI_Waitany(
                 count, irequests, &index, statusp) )
         finally:
-            for req in requests:
-                req._trans_nlcpy_array()
             release_rs(requests, None, count, irequests, NULL)
         return index
 
@@ -223,8 +161,6 @@ cdef class Request:
             with nogil: CHKERR( MPI_Testany(
                 count, irequests, &index, &flag, statusp) )
         finally:
-            for req in requests:
-                req._trans_nlcpy_array()
             release_rs(requests, None, count, irequests, NULL)
         #
         return (index, <bint>flag)
@@ -244,8 +180,6 @@ cdef class Request:
             with nogil: CHKERR( MPI_Waitall(
                 count, irequests, istatuses) )
         finally:
-            for req in requests:
-                req._trans_nlcpy_array()
             release_rs(requests, statuses, count, irequests, istatuses)
         return True
 
@@ -265,8 +199,6 @@ cdef class Request:
             with nogil: CHKERR( MPI_Testall(
                 count, irequests, &flag, istatuses) )
         finally:
-            for req in requests:
-                req._trans_nlcpy_array()
             release_rs(requests, statuses, count, irequests, istatuses)
         return <bint>flag
 
@@ -287,8 +219,6 @@ cdef class Request:
             with nogil: CHKERR( MPI_Waitsome(
                 incount, irequests, &outcount, iindices, istatuses) )
         finally:
-            for req in requests:
-                req._trans_nlcpy_array()
             release_rs(requests, statuses, incount, irequests, istatuses)
         #
         cdef int i = 0
@@ -314,8 +244,6 @@ cdef class Request:
             with nogil: CHKERR( MPI_Testsome(
                 incount, irequests, &outcount, iindices, istatuses) )
         finally:
-            for req in requests:
-                req._trans_nlcpy_array()
             release_rs(requests, statuses, incount, irequests, istatuses)
         #
         cdef int i = 0
@@ -356,23 +284,19 @@ cdef class Request:
     # Python Communication
     # --------------------
     #
-    @wait_for_nlcpy_array
     def wait(self, Status status=None):
         """
         Wait for a send or receive to complete
         """
         cdef msg = PyMPI_wait(self, status)
-        self._trans_nlcpy_array()
         return msg
     #
-    @wait_for_nlcpy_array
     def test(self, Status status=None):
         """
         Test for the completion of a send or receive
         """
         cdef int flag = 0
         cdef msg = PyMPI_test(self, &flag, status)
-        self._trans_nlcpy_array()
         return (<bint>flag, msg)
     #
     @classmethod
@@ -382,10 +306,6 @@ cdef class Request:
         """
         cdef int index = MPI_UNDEFINED
         cdef msg = PyMPI_waitany(requests, &index, status)
-
-        for req in requests:
-            req._trans_nlcpy_array()
-        msg = _get_numpy_to_nlcpy(msg)
         return (index, msg)
     #
     @classmethod
@@ -396,10 +316,6 @@ cdef class Request:
         cdef int index = MPI_UNDEFINED
         cdef int flag  = 0
         cdef msg = PyMPI_testany(requests, &index, &flag, status)
-
-        for req in requests:
-            req._trans_nlcpy_array()
-        msg = _get_numpy_to_nlcpy(msg)
         return (index, <bint>flag, msg)
     #
     @classmethod
@@ -408,10 +324,6 @@ cdef class Request:
         Wait for all previously initiated requests to complete
         """
         cdef msg = PyMPI_waitall(requests, statuses)
-
-        for req in requests:
-            req._trans_nlcpy_array()
-        msg = _get_numpy_to_nlcpy(msg)
         return msg
     #
     @classmethod
@@ -421,10 +333,6 @@ cdef class Request:
         """
         cdef int flag = 0
         cdef msg = PyMPI_testall(requests, &flag, statuses)
-
-        for req in requests:
-            req._trans_nlcpy_array()
-        msg = _get_numpy_to_nlcpy(msg)
         return (<bint>flag, msg)
 
 
@@ -434,11 +342,7 @@ cdef class Prequest(Request):
     Persistent request
     """
 
-    def __cinit__(self, Request request=None, numpy_arr=None, nlcpy_arr=None):
-        if numpy_arr is not None:
-            self.numpy_arr = numpy_arr
-            self.nlcpy_arr = nlcpy_arr
-
+    def __cinit__(self, Request request=None):
         if self.ob_mpi == MPI_REQUEST_NULL: return
         <void>(<Prequest?>request)
 

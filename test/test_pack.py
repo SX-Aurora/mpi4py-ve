@@ -74,6 +74,9 @@ class BaseTestPackExternal(object):
                             iarray1 = array(127, typecode1, items).as_raw()
                         else:
                             iarray1 = array(255, typecode1, items).as_raw()
+                        # @unittest.skip('necmpi')
+                        if hasattr(iarray1, '__ve_array_interface__'):
+                            continue
                         iarray2 = array(range(items), typecode2).as_raw()
                         oarray1 = array(-1, typecode1, items).as_raw()
                         oarray2 = array(-1, typecode2, items).as_raw()

@@ -64,6 +64,7 @@ include "atimport.pxi"
 
 bootstrap()
 initialize()
+set_mpi_local_size()
 
 include "asstring.pxi"
 include "asbuffer.pxi"
@@ -127,6 +128,7 @@ WIN_MODEL         = MPI_WIN_MODEL
 
 include "Exception.pyx"
 include "Errhandler.pyx"
+include "Notimpl.pyx"
 include "Datatype.pyx"
 include "Status.pyx"
 include "Request.pyx"
@@ -137,6 +139,8 @@ include "Group.pyx"
 include "Comm.pyx"
 include "Win.pyx"
 include "File.pyx"
+include "Util.pyx"
+include "Veo.pyx"
 
 
 # Memory Allocation
@@ -168,6 +172,7 @@ def Init():
     """
     CHKERR( MPI_Init(NULL, NULL) )
     initialize()
+    set_mpi_local_size()
 
 def Finalize():
     """
@@ -191,13 +196,18 @@ THREAD_SERIALIZED = MPI_THREAD_SERIALIZED
 THREAD_MULTIPLE   = MPI_THREAD_MULTIPLE
 #: Multiple threads may call MPI
 
-def Init_thread(int required=THREAD_MULTIPLE):
+def Init_thread(int required=THREAD_SERIALIZED):
     """
     Initialize the MPI execution environment
     """
     cdef int provided = MPI_THREAD_SINGLE
+
+    if required == THREAD_MULTIPLE:
+        PyErr_WarnEx(UserWarning, b"MPI_THREAD_MULTIPLE cannot be used with NEC MPI", 1)
+
     CHKERR( MPI_Init_thread(NULL, NULL, required, &provided) )
     initialize()
+    set_mpi_local_size()
     return provided
 
 def Query_thread():

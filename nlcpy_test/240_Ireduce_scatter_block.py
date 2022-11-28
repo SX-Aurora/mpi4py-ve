@@ -11,7 +11,7 @@ print("rank = ",rank)
 
 #x = vp.arange(size, dtype=int) * (rank + 1)
 x = vp.array([[rank+1 for i in range(size)] for j in range(size) ], dtype=int)
-y = vp.empty(3, dtype=int)
+y = vp.empty(size, dtype=int)
 
 print("x       = ",x)
 print("type(x) = ",type(x))

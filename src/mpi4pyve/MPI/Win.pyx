@@ -53,6 +53,8 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+import sys
+
 # Create flavors
 # --------------
 WIN_FLAVOR_CREATE   = MPI_WIN_FLAVOR_CREATE
@@ -79,7 +81,13 @@ LOCK_EXCLUSIVE = MPI_LOCK_EXCLUSIVE
 LOCK_SHARED    = MPI_LOCK_SHARED
 
 
-include "Notimpl.pyx"
+def _request_flush():
+    try:
+        if 'nlcpy' in sys.modules:
+            vp = sys.modules['nlcpy']
+            vp.request.flush()
+    except Exception as e:
+        pass
 
 
 cdef class Win:
@@ -402,7 +410,6 @@ cdef class Win:
     # Communication Operations
     # ------------------------
 
-    @check_for_nlcpy_array
     def Put(self, origin, int target_rank, target=None):
         """
         Put data into a memory window on a remote process.
@@ -415,7 +422,6 @@ cdef class Win:
             msg.tdisp, msg.tcount, msg.ttype,
             self.ob_mpi) )
 
-    @check_for_nlcpy_array
     def Get(self, origin, int target_rank, target=None):
         """
         Get data from a memory window on a remote process.
@@ -428,7 +434,6 @@ cdef class Win:
             msg.tdisp, msg.tcount, msg.ttype,
             self.ob_mpi) )
 
-    @check_for_nlcpy_array
     def Accumulate(self, origin, int target_rank,
                    target=None, Op op=SUM):
         """
@@ -442,7 +447,6 @@ cdef class Win:
             msg.tdisp, msg.tcount, msg.ttype,
             op.ob_mpi, self.ob_mpi) )
 
-    @check_for_nlcpy_array
     def Get_accumulate(self, origin, result, int target_rank,
                        target=None, Op op=SUM):
         """
@@ -457,7 +461,6 @@ cdef class Win:
             msg.tdisp, msg.tcount, msg.ttype,
             op.ob_mpi, self.ob_mpi) )
 
-    @check_for_nlcpy_array
     def Fetch_and_op(self, origin, result,int target_rank,
                      Aint target_disp=0, Op op=SUM):
         """
@@ -470,7 +473,6 @@ cdef class Win:
                 target_rank, target_disp,
                 op.ob_mpi, self.ob_mpi) )
 
-    @check_for_nlcpy_array
     def Compare_and_swap(self, origin, compare, result,
                          int target_rank, Aint target_disp=0):
         """
@@ -485,7 +487,6 @@ cdef class Win:
     # Request-based RMA Communication Operations
     # ------------------------------------------
 
-    @check_for_nlcpy_array
     def Rput(self, origin, int target_rank, target=None):
         """
         Put data into a memory window on a remote process.
@@ -501,7 +502,6 @@ cdef class Win:
         request.ob_buf = msg
         return request
 
-    @check_for_nlcpy_array
     def Rget(self, origin, int target_rank, target=None):
         """
         Get data from a memory window on a remote process.
@@ -517,7 +517,6 @@ cdef class Win:
         request.ob_buf = msg
         return request
 
-    @check_for_nlcpy_array
     def Raccumulate(self, origin, int target_rank,
                     target=None, Op op=SUM):
         """
@@ -534,7 +533,6 @@ cdef class Win:
         request.ob_buf = msg
         return request
 
-    @check_for_nlcpy_array
     def Rget_accumulate(self, origin, result, int target_rank,
                         target=None, Op op=SUM):
         """
@@ -563,6 +561,7 @@ cdef class Win:
         """
         Perform an MPI fence synchronization on a window
         """
+        _request_flush()
         with nogil: CHKERR( MPI_Win_fence(assertion, self.ob_mpi) )
 
     # General Active Target Synchronization
@@ -572,6 +571,7 @@ cdef class Win:
         """
         Start an RMA access epoch for MPI
         """
+        _request_flush()
         with nogil: CHKERR( MPI_Win_start(
             group.ob_mpi, assertion, self.ob_mpi) )
 
@@ -585,6 +585,7 @@ cdef class Win:
         """
         Start an RMA exposure epoch
         """
+        _request_flush()
         with nogil: CHKERR( MPI_Win_post(
             group.ob_mpi, assertion, self.ob_mpi) )
 
@@ -609,6 +610,7 @@ cdef class Win:
         """
         Begin an RMA access epoch at the target process
         """
+        _request_flush()
         with nogil: CHKERR( MPI_Win_lock(
             lock_type, rank, assertion, self.ob_mpi) )
 
@@ -622,6 +624,7 @@ cdef class Win:
         """
         Begin an RMA access epoch at all processes
         """
+        _request_flush()
         with nogil: CHKERR( MPI_Win_lock_all(assertion, self.ob_mpi) )
 
     def Unlock_all(self):
@@ -661,6 +664,7 @@ cdef class Win:
         """
         Synchronize public and private copies of the given window
         """
+        _request_flush()
         with nogil: CHKERR( MPI_Win_sync(self.ob_mpi) )
 
 

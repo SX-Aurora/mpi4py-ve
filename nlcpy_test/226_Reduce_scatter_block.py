@@ -10,7 +10,7 @@ root = 0
 print("rank = ",rank)
 
 x = vp.arange(size, dtype=int) * (rank + 1)
-y = vp.empty(1, dtype=int)
+y = vp.zeros(1, dtype=int)
 
 print("x       = ",x)
 print("type(x) = ",type(x))

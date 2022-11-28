@@ -9,21 +9,21 @@ rank = comm.Get_rank()
 
 fh = get_fh()
 fh.Set_size(0)
-fh.Set_view(0, MPI.INT)
+fh.Set_view(rank*12, MPI.INT)
 
 x = vp.array([1,2,3], dtype=int)
-y = vp.empty(3, dtype=int)
+y = vp.zeros(3, dtype=int)
 
 print("x       = ",x)
 print("type(x) = ",type(x))
 print("y       = ",y)
 print("type(y) = ",type(y))
 
-fh.Iwrite_at_all(3, x).Wait()
+fh.Iwrite_at_all(rank*12, x).Wait()
 fh.Sync()
 comm.Barrier()
 fh.Sync()
-fh.Iread_at_all(3, y).Wait()
+fh.Iread_at_all(rank*12, y).Wait()
 comm.Barrier()
 
 print("Iwrite_at_all-Iread_at_all done")

@@ -77,7 +77,7 @@ provides an object oriented interface which closely follows MPI-2 C++
 bindings.
 """
 
-__version__ = '0.1.0b1'
+__version__ = '1.0.0'
 __author__ = 'NEC (dev-nlcpy@sxarr.jp.nec.com)'
 __credits__ = 'NEC Corporation'
 
@@ -142,7 +142,7 @@ def rc(**kargs):  # pylint: disable=invalid-name
 
 rc.initialize = True
 rc.threads = True
-rc.thread_level = 'multiple'
+rc.thread_level = 'serialized'
 rc.finalize = None
 rc.fast_reduce = True
 rc.recv_mprobe = True
