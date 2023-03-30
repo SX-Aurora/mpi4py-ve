@@ -58,6 +58,8 @@ for n in range(0, args.n):
         buf = dev1.arange(nelem, dtype='f8')
     else:
         buf = dev2.empty(nelem, dtype='f8')
+    if isinstance(buf, vp.ndarray):
+        buf.venode.synchronize()
     comm.Barrier()
     t0 = MPI.Wtime()
     for i in range(loop_count):

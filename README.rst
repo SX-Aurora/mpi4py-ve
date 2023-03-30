@@ -61,11 +61,11 @@ You can install *mpi4py-ve* by executing either of the following commands.
 
 The shared objects for Vector Host, which are included in the wheel package, are compiled by gcc 4.8.5 and tested by using following softwares:
     +---------+--------------------+
-    | NEC MPI | v2.22.0 and V3.1.0 |
+    | NEC MPI | v2.24.0 and V3.3.0 |
     +---------+--------------------+
-    | NumPy   | v1.19.2            |
+    | NumPy   | v1.19.5            |
     +---------+--------------------+
-    | NLCPy   | v2.2.0             |
+    | NLCPy   | v3.0.0             |
     +---------+--------------------+
 
 ***********************************
@@ -76,15 +76,31 @@ Before building this package, you need to execute the environment setup script *
 
 * When using *sh* or its variant:
 
-    ::
+    **For VE30**
+    
+        ::
 
-    $ source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.sh
+        $ source /opt/nec/ve3/mpi/X.X.X/bin/necmpivars.sh
+
+    **For VE20, VE10, or VE10E**
+    
+        ::
+        
+        $ source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.sh
 
 * When using *csh* or its variant:
 
-    ::
+    **For VE30**
+    
+        ::
 
-    $ source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.csh
+        % source /opt/nec/ve3/mpi/X.X.X/bin/necmpivars.csh
+
+    **For VE20, VE10, or VE10E**
+    
+        ::
+        
+        % source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.csh
 
 Here, X.X.X denotes the version number of NEC MPI.
 
@@ -160,19 +176,33 @@ Before running the Python script, you need to execute the environment the follow
 
 * When using *sh* or its variant:
 
-    ::
+    **For VE30**
 
-    $ source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.sh gnu 4.8.5
-    $ source /opt/nec/ve/nlc/Y.Y.Y/bin/nlcvars.sh
+        ::
+
+        $ source /opt/nec/ve3/mpi/X.X.X/bin/necmpivars.sh gnu 4.8.5
+
+    **For VE20, VE10, or VE10E**
+
+        ::
+        
+        $ source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.sh gnu 4.8.5
 
 * When using *csh* or its variant:
 
-    ::
+    **For VE30**
 
-    $ source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.csh gnu 4.8.5
-    $ source /opt/nec/ve/nlc/Y.Y.Y/bin/nlcvars.csh
+        ::
 
-Here, X.X.X and Y.Y.Y denote the version number of NEC MPI and NLC, respectively.
+        % source /opt/nec/ve3/mpi/X.X.X/bin/necmpivars.csh gnu 4.8.5
+    
+    **For VE20, VE10, or VE10E**
+    
+        ::
+        
+        % source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.csh gnu 4.8.5
+
+Here, X.X.X denotes the version number of NEC MPI.
 
 When using the *mpirun* command:
 

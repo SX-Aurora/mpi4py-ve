@@ -14,7 +14,6 @@ def get_fh():
     fname = comm.bcast(fname, 0)
     amode  = MPI.MODE_RDWR | MPI.MODE_CREATE
     amode |= MPI.MODE_DELETE_ON_CLOSE
-    amode |= MPI.MODE_UNIQUE_OPEN
     info = MPI.INFO_NULL
     try:
         fh = MPI.File.Open(comm, fname, amode, info)
