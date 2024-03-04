@@ -245,19 +245,19 @@ cdef inline int mpi_active() nogil:
     # MPI should be active ...
     return 1
 
-cdef int initialize() nogil except -1:
+cdef int initialize() except -1 nogil:
     if not mpi_active(): return 0
     comm_set_eh(MPI_COMM_SELF)
     comm_set_eh(MPI_COMM_WORLD)
     return 0
 
-cdef void finalize() nogil:
+cdef void finalize() noexcept nogil:
     if not mpi_active(): return
     <void>PyMPI_Commctx_finalize()
 
 cdef int abort_status = 0
 
-cdef void atexit() nogil:
+cdef void atexit() noexcept nogil:
     if not mpi_active(): return
     if abort_status:
         <void>MPI_Abort(MPI_COMM_WORLD, abort_status)
@@ -295,6 +295,8 @@ cdef int get_mpi_local_size_from_nodeid(int nodeid):
     comm = MPI_COMM_WORLD
     MPI_Comm_size(comm, &size)
     cdef int* nodes_nodeid = <int*>malloc(sizeof(int) * size)
+    if nodes_nodeid == NULL:
+        raise RuntimeError("Failed to allocate memory.")
     MPI_Allgather(&nodeid, 1, MPI_INT, nodes_nodeid, 1, MPI_INT, comm)
     for rank in range(0, size):
         if nodeid ==  nodes_nodeid[rank]:
@@ -312,6 +314,8 @@ cdef int get_mpi_local_size_from_processname():
     MPI_Comm_size(comm, &size)
     MPI_Get_processor_name(processor_name, &resultlen)
     cdef char* nodes_processor_name = <char*>malloc(sizeof(processor_name) * size)
+    if nodes_processor_name == NULL:
+        raise RuntimeError("Failed to allocate memory.")
     MPI_Allgather(processor_name, sizeof(processor_name), MPI_CHAR, 
                   nodes_processor_name, sizeof(processor_name) ,MPI_CHAR, comm)
     for rank in range(0, size):
@@ -336,7 +340,7 @@ cdef void set_mpi_local_size():
     else:
         local_size = get_mpi_local_size_from_processname()
     os.environ["_MPI4PYVE_MPI_LOCAL_SIZE"] = str(local_size)
-        
+
 
 # -----------------------------------------------------------------------------
 
@@ -362,7 +366,7 @@ cdef int PyMPI_Raise(int ierr) except -1 with gil:
         PyErr_SetObject(<object>PyExc_RuntimeError, <long>ierr)
     return 0
 
-cdef inline int CHKERR(int ierr) nogil except -1:
+cdef inline int CHKERR(int ierr) except -1 nogil:
     if ierr == MPI_SUCCESS: return 0
     PyMPI_Raise(ierr)
     return -1

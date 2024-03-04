@@ -60,6 +60,16 @@
 
 #include "mpi.h"
 
+#ifdef MPI4PYVE_NEC_MPI
+#include <stdlib.h>
+#define MPI_Init(argc, argv) \
+    ((getenv("NMPI_LOCAL_RANK") != NULL) ? MPI_Init(argc, argv) : MPI_ERR_OTHER)
+#define MPI_Init_thread(argc, argv, required, provided) \
+    ((getenv("NMPI_LOCAL_RANK") != NULL) ? MPI_Init_thread(argc, argv, required, provided) : MPI_ERR_OTHER)
+#define MPI_Finalize() \
+    ((getenv("NMPI_LOCAL_RANK") != NULL) ? MPI_Finalize() : MPI_SUCCESS)
+#endif /* MPI4PYVE_NEC_MPI */
+
 #if (MPI_VERSION < 3) && !defined(PyMPI_HAVE_MPI_Message)
 typedef void *PyMPI_MPI_Message;
 #define MPI_Message PyMPI_MPI_Message

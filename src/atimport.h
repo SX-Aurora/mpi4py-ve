@@ -6,6 +6,16 @@
 #include "Python.h"
 #include "mpi.h"
 
+#ifdef MPI4PYVE_NEC_MPI
+#include <stdlib.h>
+#define MPI_Init(argc, argv) \
+    ((getenv("NMPI_LOCAL_RANK") != NULL) ? MPI_Init(argc, argv) : MPI_ERR_OTHER)
+#define MPI_Init_thread(argc, argv, required, provided) \
+    ((getenv("NMPI_LOCAL_RANK") != NULL) ? MPI_Init_thread(argc, argv, required, provided) : MPI_ERR_OTHER)
+#define MPI_Finalize() \
+    ((getenv("NMPI_LOCAL_RANK") != NULL) ? MPI_Finalize() : MPI_SUCCESS)
+#endif /* MPI4PYVE_NEC_MPI */
+
 /* ------------------------------------------------------------------------- */
 
 #include "lib-mpi/config.h"

@@ -77,7 +77,7 @@ provides an object oriented interface which closely follows MPI-2 C++
 bindings.
 """
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 __author__ = 'NEC (dev-nlcpy@sxarr.jp.nec.com)'
 __credits__ = 'NEC Corporation'
 

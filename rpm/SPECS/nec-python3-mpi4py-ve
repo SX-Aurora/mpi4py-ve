@@ -89,12 +89,12 @@ echo ${mpi4py_ve_path} > mpi4py-ve.pth
 ##
 ##############################################
 if [ $1 == 0 ]; then
-  rm -rf %{mpi4py_ve_libdir}/mpi4py-ve
+  rm -rf %{mpi4py_ve_libdir}/mpi4pyve
   rmdir --ignore-fail-on-non-empty %{mpi4py_ve_libdir} > /dev/null 2>&1
   rmdir --ignore-fail-on-non-empty %{mpi4py_ve_topdir}/%{mpi4py_ve_version}/lib > /dev/null 2>&1
   rmdir --ignore-fail-on-non-empty %{mpi4py_ve_topdir}/%{mpi4py_ve_version} > /dev/null 2>&1
   rmdir --ignore-fail-on-non-empty %{mpi4py_ve_topdir} > /dev/null 2>&1
-  if ls -d /opt/nec/ve/mpi4py-ve/*.*.*/lib/%{python_version}/mpi4py_ve > /dev/null 2>&1; then
+  if ls -d /opt/nec/ve/mpi4py-ve/*.*.*/lib/%{python_version}/mpi4pyve > /dev/null 2>&1; then
     mpi4py_ve_path=`ls -d /opt/nec/ve/mpi4py-ve/*.*.*/lib/%{python_version} | sort -rV | head -1`
     echo ${mpi4py_ve_path} > /usr/lib64/%{python_version}/site-packages/mpi4py-ve.pth
   else

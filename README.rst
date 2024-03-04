@@ -15,10 +15,10 @@ Requirements
 Before the installation, the following components are required to be installed on your x86 Node of SX-Aurora TSUBASA.
 
 - `Alternative VE Offloading (AVEO) <https://sxauroratsubasa.sakura.ne.jp/documents/veos/en/aveo/index.html>`_
-	- required version: >= 2.13.0
+	- required version: >= 3.0.2
 
 - `NEC MPI <https://sxauroratsubasa.sakura.ne.jp/documents/mpi/g2am01e-NEC_MPI_User_Guide_en/frame.html>`_
-	- required NEC MPI version: > 2.22.0 (for Mellanox OFED 4.x) or >= 3.1.0 (for Mellanox OFED 5.x)
+	- required NEC MPI version: >= 2.26.0 (for Mellanox OFED 4.x) or >= 3.5.0 (for Mellanox OFED 5.x)
 
 - `Python <https://www.python.org/>`_
         - required version: 3.6, 3.7, or 3.8
@@ -27,10 +27,10 @@ Before the installation, the following components are required to be installed o
         - required version: v1.17, v1.18, v1.19, or v1.20
 
 - `NLC(optional) <https://sxauroratsubasa.sakura.ne.jp/documents/sdk/SDK_NLC/UsersGuide/main/en/index.html>`_
-	- required version: >= 2.3.0
+	- required version: >= 3.0.0
 
 - `NLCPy(optional) <https://sxauroratsubasa.sakura.ne.jp/documents/nlcpy/en/>`_
-        - required version: >= 2.2.0
+        - required version: >= 3.0.1
 
 Since December 2022, mpi4py-ve has been provided as a software of NEC SDK (NEC Software Development Kit for Vector Engine).
 If NEC SDK on your machine has been properly installed or updated after that, mpi4py-ve is available by using /usr/bin/python3 command.
@@ -59,13 +59,13 @@ You can install *mpi4py-ve* by executing either of the following commands.
  
         $ pip install <path_to_wheel>
 
-The shared objects for Vector Host, which are included in the wheel package, are compiled by gcc 4.8.5 and tested by using following softwares:
+The shared objects for Vector Host, which are included in the wheel package, are compiled by gcc 4.8.5 and tested by using following software:
     +---------+--------------------+
-    | NEC MPI | v2.24.0 and V3.3.0 |
+    | NEC MPI | v2.26.0 and v3.5.0 |
     +---------+--------------------+
     | NumPy   | v1.19.5            |
     +---------+--------------------+
-    | NLCPy   | v3.0.0             |
+    | NLCPy   | v3.0.1             |
     +---------+--------------------+
 
 ***********************************
@@ -277,7 +277,7 @@ The following examples show how to launch MPI programs that use mpi4py-ve and NL
       #PBS --venum-lhost=4 # The number of VEs per logical host
       #PBS --cpunum-lhost=32 # The number of CPUs per logical host
       
-      source /opt/nec/ve/mpi/2.22.0/bin/necmpivars.sh
+      source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.sh
       export NMPI_USE_COMMAND_SEARCH_PATH=ON
       mpirun -host 0 -veo -np 32 python a.py
 
@@ -292,7 +292,7 @@ The following examples show how to launch MPI programs that use mpi4py-ve and NL
       #PBS --venum-lhost=4 # The number of VEs per logical host
       #PBS --cpunum-lhost=16 # The number of CPUs per logical host
       
-      source /opt/nec/ve/mpi/2.22.0/bin/necmpivars.sh
+      source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.sh
       export NMPI_USE_COMMAND_SEARCH_PATH=ON
       VE_NLCPY_NODELIST=0,3 mpirun -host 0 -veo -np 16 python a.py
 
@@ -308,9 +308,11 @@ The following examples show how to launch MPI programs that use mpi4py-ve and NL
       #PBS --cpunum-lhost=8 # The number of CPUs per logical host
       #PBS --use-hca=2 # The number of HCAs
       
-      source /opt/nec/ve/mpi/2.22.0/bin/necmpivars.sh
+      source /opt/nec/ve/mpi/X.X.X/bin/necmpivars.sh
       export NMPI_USE_COMMAND_SEARCH_PATH=ON
       mpirun -veo -np 32 python a.py
+
+Here, X.X.X denotes the version number of NEC MPI.
 
 *********
 Profiling

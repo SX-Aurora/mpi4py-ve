@@ -8,7 +8,7 @@ BASEDIR = ..
 PLAT             = el8
 ARCH             = x86_64
 VERSION_PYTHON   = python3.6
-VERSION_MPI4PYVE = 1.0.0
+VERSION_MPI4PYVE = 1.0.1
 VERSION_RPM      = 1
 RELEASE          = 1
 
