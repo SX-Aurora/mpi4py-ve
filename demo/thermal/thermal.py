@@ -230,7 +230,7 @@ def thermal(dev):
             zind = int(zstep[i])
             c = draw(fig, ax, xx[zind, :, :], yy[zind, :, :],
                      grid_root[zind, :, :], float(LZ * zind / mz), loop_cnt)
-        fig.colorbar(c, ax=axes[:, 1], location='bottom', label='T[$^{\circ}$C]')
+        fig.colorbar(c, ax=axes[:, 1], location='bottom', label='T[$^{\\circ}$C]')
         plt.savefig('img_thermal_{}.png'.format(dev.__name__))
 
     if dev.__name__ == 'nlcpy':

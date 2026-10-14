@@ -2,32 +2,40 @@
 default: build
 
 PYTHON  = python$(py)
-MPIEXEC = mpiexec
+MPIEXEC = mpirun-py
+
+PLAT = manylinux1_x86_64
+SETPLAT = _PYTHON_HOST_PLATFORM=${PLAT}
+MPIOPT = MPICFG=necmpi
 
 # ----
 
 .PHONY: config build test
-config:
-	${PYTHON} setup.py config $(opt)
+#config:
+#	${PYTHON} setup.py config $(opt)
 build:
-	${PYTHON} setup.py build $(opt)
+	#${PYTHON} setup.py build $(opt)
+	${SETPLAT} ${MPIOPT} ${PYTHON} -m build
 test:
 	${VALGRIND} ${PYTHON} ${PWD}/test/runtests.py
 test-%:
 	${MPIEXEC} -veo -np $* ${VALGRIND} $$(which python) ${PWD}/test/runtests.py
 #	${MPIEXEC} -np $* ${VALGRIND} ${PYTHON} ${PWD}/test/runtests.py
 
-.PHONY: srcbuild srcclean
-srcbuild:
-	${PYTHON} setup.py build_src $(opt)
+#.PHONY: srcbuild srcclean
+.PHONY: srcclean
+#srcbuild:
+#	${PYTHON} setup.py build_src $(opt)
 srcclean:
-	${RM} src/mpi4pyve.MPI.c
-	${RM} src/mpi4pyve/include/mpi4pyve/mpi4pyve.MPI.h
-	${RM} src/mpi4pyve/include/mpi4pyve/mpi4pyve.MPI_api.h
+
+	${RM} src/mpi4pyve/MPI.c
+	${RM} src/mpi4pyve/include/mpi4pyve/MPI.h
+	${RM} src/mpi4pyve/include/mpi4pyve/MPI_api.h
 
 .PHONY: clean distclean fullclean
 clean:
-	${PYTHON} setup.py clean --all
+	${RM} -rf build/
+	#${PYTHON} setup.py clean --all
 distclean: clean
 	-${RM} -r build  _configtest* *.py[co]
 	-${RM} -r MANIFEST dist mpi4py-ve.egg-info
@@ -43,19 +51,25 @@ fullclean: distclean srcclean docsclean
 # ----
 
 .PHONY: install uninstall
-install: build
-	${PYTHON} setup.py install --prefix='' --user $(opt)
+#install: build
+install:
+	#${PYTHON} setup.py install --prefix='' --user $(opt)
+	${MPIOPT} ${PYTHON} -m pip install .
 uninstall:
-	-${RM} -r $(shell ${PYTHON} -m site --user-site)/mpi4py-ve
-	-${RM} -r $(shell ${PYTHON} -m site --user-site)/mpi4py-ve-*-py*.egg-info
+	#-${RM} -r $(shell ${PYTHON} -m site --user-site)/mpi4py-ve
+	#-${RM} -r $(shell ${PYTHON} -m site --user-site)/mpi4py-ve-*-py*.egg-info
+	${PYTHON} -m pip uninstall mpi4py-ve
 
 # ----
 
-.PHONY: docs docs-html docs-pdf docs-misc
-docs: docs-html docs-pdf docs-misc
-docs-html: rst2html sphinx-html epydoc-html
-docs-pdf:  sphinx-pdf epydoc-pdf
-docs-misc: sphinx-man sphinx-info
+#.PHONY: docs docs-html docs-pdf docs-misc
+.PHONY: docs docs-html
+#docs: docs-html docs-pdf docs-misc
+docs: docs-html
+#docs-html: rst2html sphinx-html epysoc-html
+docs-html: rst2html
+#docs-pdf:  sphinx-pdf epydoc-pdf
+#docs-misc: sphinx-man sphinx-info
 
 RST2HTML = $(shell command -v rst2html || command -v rst2html.py || false)
 RST2HTMLOPTS  = --input-encoding=utf-8
@@ -75,8 +89,8 @@ docsclean:
 # ----
 
 .PHONY: sdist
-sdist: srcbuild docs
-	${PYTHON} setup.py sdist $(opt)
+sdist: docs
+#	${PYTHON} setup.py sdist $(opt)
+	${MPIOPT} ${PYTHON} -m build --sdist
 
 # ----
-

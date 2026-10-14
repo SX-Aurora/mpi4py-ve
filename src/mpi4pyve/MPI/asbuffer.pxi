@@ -224,27 +224,6 @@ cdef class memory:
                           self.view.buf, self.view.len,
                           self.view.readonly, flags)
 
-    # buffer interface (legacy)
-
-    def __getsegcount__(self, Py_ssize_t *lenp):
-        if lenp != NULL:
-            lenp[0] = self.view.len
-        return 1
-
-    def __getreadbuffer__(self, Py_ssize_t idx, void **p):
-        if idx != 0:
-            raise SystemError("accessing non-existent buffer segment")
-        p[0] = self.view.buf
-        return self.view.len
-
-    def __getwritebuffer__(self, Py_ssize_t idx, void **p):
-        if self.view.readonly:
-            raise TypeError("memory buffer is read-only")
-        if idx != 0:
-            raise SystemError("accessing non-existent buffer segment")
-        p[0] = self.view.buf
-        return self.view.len
-
     # sequence interface (basic)
 
     def __len__(self):

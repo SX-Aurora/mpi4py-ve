@@ -64,4 +64,5 @@
 #cython: optimize.use_switch=False
 from __future__ import absolute_import
 cimport cython
-include "mpi4pyve/MPI/MPI.pyx"
+#include "mpi4pyve/MPI/MPI.pyx"
+include "MPI/MPI.pyx"

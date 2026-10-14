@@ -5,10 +5,10 @@ all:mpi4py-ve
 BASEDIR = ..
 
 # Parameters passed into the spec file
-PLAT             = el8
+PLAT             = el10
 ARCH             = x86_64
-VERSION_PYTHON   = python3.6
-VERSION_MPI4PYVE = 1.0.1
+VERSION_PYTHON   = python3.12
+VERSION_MPI4PYVE = 1.1.0
 VERSION_RPM      = 1
 RELEASE          = 1
 

@@ -351,6 +351,7 @@ class TestCoverageDeviceWin(unittest.TestCase):
             n.fill(1)
             if dev1 == vp:
                 n.venode.synchronize()
+        comm.Barrier()
         if rank != 0:
             win_n.Lock(MPI.LOCK_EXCLUSIVE, 0)
             n.fill(0)

@@ -3,6 +3,12 @@
 
 %define mpi4py_ve_topdir    /opt/nec/ve/mpi4py-ve
 %define mpi4py_ve_libdir    %{mpi4py_ve_topdir}/%{mpi4py_ve_version}/lib/%{python_version}
+%define mpi4py_ve_bindir    %{mpi4py_ve_libdir}/mpi4pyve/bin
+
+# Installed files
+%define mpi4py_ve_vars_sh       mpi4pyvevars.sh
+%define mpi4py_ve_vars_csh      mpi4pyvevars.csh
+%define mpirun_wrapper          mpirun-py
 
 Name:       %{product}
 Version:    %{rpm_version}
@@ -47,9 +53,16 @@ mpi4py-ve is an extension to mpi4py for SX-Aurora TSUBASA systems.
 ##################################################
 # create install directories
 install -d --mode=755 %{buildroot}%{mpi4py_ve_libdir}
+# lib
 cp -r mpi4pyve %{buildroot}%{mpi4py_ve_libdir}/
 find %{buildroot}%{mpi4py_ve_libdir} -name "*.so" -type f | xargs chmod 755
 find %{buildroot}%{mpi4py_ve_libdir} ! -name "*.so" -type f | xargs chmod 644
+# bin
+cd mpi4pyve/bin
+%__install -m 644 %{mpi4py_ve_vars_sh}       %{buildroot}%{mpi4py_ve_bindir}/
+%__install -m 644 %{mpi4py_ve_vars_csh}      %{buildroot}%{mpi4py_ve_bindir}/
+%__install -m 755 %{mpirun_wrapper}          %{buildroot}%{mpi4py_ve_bindir}/
+cd ../..
 
 ##############################################
 ##
@@ -109,5 +122,7 @@ fi
 %changelog
 ##
 ##############################################
+* Wed Mar 18 2026 NEC Corporation
+- Add mpirun wrapper scripts
 * Tue Oct 25 2022 NEC Corporation
 - First version of this spec file.

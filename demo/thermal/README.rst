@@ -3,7 +3,7 @@ Performs the 3D Thermal Simulation
 
 Issuing at the command line for VH::
 
-    $ mpirun -veo -np 8 python thermal.py -dev vh
+    $ mpirun-py -veo -np 8 python thermal.py -dev vh
     loop_cnt:          0, l2_norm:   560.756531
     loop_cnt:       1000, l2_norm:     3.863911
     loop_cnt:       2000, l2_norm:     1.941148
@@ -27,7 +27,7 @@ Issuing at the command line for VH::
 
 Issuing at the command line for VE::
 
-    $ VE_NLCPY_NODELIST=0,1,2,3 mpirun -veo -np 4 python thermal.py -dev ve
+    $ VE_NLCPY_NODELIST=0,1,2,3 mpirun-py -veo -np 4 python thermal.py -dev ve
     loop_cnt:          0, l2_norm:   560.756592
     loop_cnt:       1000, l2_norm:     3.863911
     loop_cnt:       2000, l2_norm:     1.941150

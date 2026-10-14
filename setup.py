@@ -2,11 +2,6 @@
 # Author:  NEC
 # Contact: dev-nlcpy@sxarr.jp.nec.com
 
-__doc__ = \
-"""
-Python bindings for MPI
-"""
-
 import sys
 import os
 import re
@@ -15,6 +10,11 @@ try:
     import setuptools
 except ImportError:
     setuptools = None
+
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 pyver = sys.version_info[:2]
 if pyver < (3, 6):
@@ -30,8 +30,13 @@ sys.path.insert(0, os.path.join(topdir, 'conf'))
 # Metadata
 # --------------------------------------------------------------------
 
-def name():
-    return 'mpi4py-ve'
+# open project.toml and read config from it.
+def get_pyproject_config():
+    with open("pyproject.toml", "rb") as f:
+        return tomllib.load(f)
+
+config = get_pyproject_config()
+project_data = config.get("project", {})
 
 def version():
     srcdir = os.path.join(topdir, 'src')
@@ -39,70 +44,21 @@ def version():
         m = re.search(r"__version__\s*=\s*'(.*)'", f.read())
         return m.groups()[0]
 
-def description():
-    with open(os.path.join(topdir, 'README.rst')) as f:
-        return f.read()
-
-name    = name()
+name    = project_data.get("name")
 version = version()
 
-# Confirmation is required as soon as the URL is confirmed.
-url      = 'https://github.com/SX-Aurora/%(name)s/' % vars()
-download = url + 'releases/' % vars()
-
-classifiers = """
-Development Status :: 5 - Production/Stable
-License :: OSI Approved :: BSD License
-Operating System :: POSIX :: Linux
-Programming Language :: Python :: 3.6
-Programming Language :: Python :: 3.7
-Programming Language :: Python :: 3.8
-Programming Language :: C
-Programming Language :: Cython
-Programming Language :: Python :: 3 :: Only
-Topic :: Scientific/Engineering
-Topic :: Software Development
-"""
-
-keywords = """
-scientific computing
-parallel computing
-message passing interface
-MPI
-"""
-
-platforms = """
-Linux
-Unix
-"""
-
 metadata = {
-    'name'             : name,
     'version'          : version,
-    'description'      : __doc__.strip(),
-    'long_description' : description(),
-    'url'              : url,
-    'download_url'     : download,
-    'classifiers'      : [c for c in classifiers.split('\n') if c],
-    'keywords'         : [k for k in keywords.split('\n')    if k],
-    'platforms'        : [p for p in platforms.split('\n')   if p],
-    'license'          : 'BSD',
-    'author'           : 'NEC',
-    'author_email'     : 'dev-nlcpy@sxarr.jp.nec.com',
-    'maintainer'       : 'NEC',
-    'maintainer_email' : 'dev-nlcpy@sxarr.jp.nec.com',
     }
-
-metadata['provides'] = ['mpi4py_ve']
 
 # --------------------------------------------------------------------
 # Extension modules
 # --------------------------------------------------------------------
 
 def run_command(exe, args):
-    from distutils.spawn import find_executable
+    from shutil import which
     from distutils.util  import split_quoted
-    cmd = find_executable(exe)
+    cmd = which(exe)
     if not cmd: return []
     if not isinstance(args, str):
         args = ' '.join(args)
@@ -357,7 +313,8 @@ def ext_modules():
     MPI = dict(
         name='mpi4pyve.MPI',
         sources=['src/MPI.c'],
-        depends=(['src/mpi4pyve.MPI.c'] +
+        include_dirs=['src'],
+        depends=(['src/mpi4pyve/MPI.c'] +
                  glob('src/*.h') +
                  glob('src/lib-mpi/*.h') +
                  glob('src/lib-mpi/config/*.h') +
@@ -427,6 +384,33 @@ def executables():
     return [pyexe]
 
 # --------------------------------------------------------------------
+# Post build process
+# --------------------------------------------------------------------
+from setuptools.command.build import build
+
+class PostBuildCommand(build):
+    def run(self):
+        # standard build process
+        super().run()
+        # remove local path from RPATH using patchelf.
+        print("#########################################")
+        print("Running post-build command...")
+        ret = os.system("patchelf --help > /dev/null 2>&1")
+        if ret != 0:
+            raise RuntimeError("patchelf command failed.\n" +
+                               "Please install patchelf with \"pip install patchelf.\"")
+        for pathname, dirs, files in os.walk("./build"):
+            for file in files:
+                if file.endswith(".so"):
+                    so_file = os.path.join(pathname,file)
+                    patch_cmd = "patchelf --shrink-rpath " + so_file
+                    print(patch_cmd)
+                    ret = os.system(patch_cmd)
+                    if ret != 0:
+                        raise RuntimeError("'patchelf --shrink-rpath' failed. exitting.")
+        print("#########################################")
+
+# --------------------------------------------------------------------
 # Setup
 # --------------------------------------------------------------------
 
@@ -445,30 +429,22 @@ def run_setup():
     if setuptools:
         setup_args['zip_safe'] = False
     if setuptools and not os.getenv('CONDA_BUILD'):
-        src = os.path.join('src', 'mpi4pyve.MPI.c')
+        src = os.path.join('src', 'mpi4pyve', 'MPI.c')
         has_src = os.path.exists(os.path.join(topdir, src))
         has_git = os.path.isdir(os.path.join(topdir, '.git'))
         has_hg  = os.path.isdir(os.path.join(topdir, '.hg'))
         if not has_src or has_git or has_hg:
             setup_args['setup_requires'] = ['Cython>='+CYTHON]
     #
-    setup(packages     = ['mpi4pyve', 'mpi4pyve.futures', 'mpi4pyve.util', 'mpi4pyve.veo'],
-          package_dir  = {'mpi4pyve' : 'src/mpi4pyve',
-                          'mpi4pyve.util' : 'src/mpi4pyve/util',
-                          'mpi4pyve.veo' : 'src/mpi4pyve/veo'},
-          package_data = {'mpi4pyve' : ['*.pxd',
-                                      'include/mpi4pyve/*.h',
-                                      'include/mpi4pyve/*.i',
-                                      'include/mpi4pyve/*.pxi',]},
-          ext_modules  = [Ext(**ext) for ext in ext_modules()],
+    setup(ext_modules  = [Ext(**ext) for ext in ext_modules()],
           libraries    = [Lib(**lib) for lib in libraries()  ],
           executables  = [Exe(**exe) for exe in executables()],
+          cmdclass = {'build': PostBuildCommand,},
           **setup_args)
 
 def chk_cython(VERSION):
     from distutils import log
-    from distutils.version import LooseVersion
-    from distutils.version import StrictVersion
+    from packaging.version import parse as parse_version
     warn = lambda msg='': sys.stderr.write(msg+'\n')
     #
     try:
@@ -487,15 +463,9 @@ def chk_cython(VERSION):
     except AttributeError:
         from Cython.Compiler.Version import version as CYTHON_VERSION
     REQUIRED = VERSION
-    m = re.match(r"(\d+\.\d+(?:\.\d+)?).*", CYTHON_VERSION)
-    if m:
-        Version = StrictVersion
-        AVAILABLE = m.groups()[0]
-    else:
-        Version = LooseVersion
-        AVAILABLE = CYTHON_VERSION
+    AVAILABLE = CYTHON_VERSION
     if (REQUIRED is not None and
-        Version(AVAILABLE) < Version(REQUIRED)):
+        parse_version(AVAILABLE) < parse_version(REQUIRED)):
         warn("*"*80)
         warn()
         warn(" You need to install Cython %s (you have version %s)"
@@ -512,8 +482,8 @@ def run_cython(source, depends=(), includes=(),
                wdir=None, force=False, VERSION=None):
     from glob import glob
     from distutils import log
-    from distutils import dep_util
     from distutils.errors import DistutilsError
+    from setuptools import modified
     target = os.path.splitext(source)[0]+'.c'
     cwd = os.getcwd()
     try:
@@ -521,7 +491,7 @@ def run_cython(source, depends=(), includes=(),
         alldeps = [source]
         for dep in depends:
             alldeps += glob(dep)
-        if not (force or dep_util.newer_group(alldeps, target)):
+        if not (force or modified.newer_group(alldeps, target)):
             log.debug("skipping '%s' -> '%s' (up-to-date)",
                       source, target)
             return
@@ -543,12 +513,12 @@ def run_cython(source, depends=(), includes=(),
 def build_sources(cmd):
     from distutils.errors import DistutilsError
     has_src = os.path.exists(os.path.join(
-        topdir, 'src', 'mpi4pyve.MPI.c'))
+        topdir, 'src', 'mpi4pyve', 'MPI.c'))
     has_vcs = (os.path.isdir(os.path.join(topdir, '.git')) or
                os.path.isdir(os.path.join(topdir, '.hg' )))
     if (has_src and not has_vcs and not cmd.force): return
     # mpi4pyve.MPI
-    source = 'mpi4pyve.MPI.pyx'
+    source = 'mpi4pyve/MPI.pyx'
     depends = ['mpi4pyve/MPI/*.pyx',
                'mpi4pyve/MPI/*.pxd',
                'mpi4pyve/MPI/*.pxi',]

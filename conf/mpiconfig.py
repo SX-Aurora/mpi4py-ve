@@ -1,7 +1,7 @@
 import sys, os, platform
 
 from distutils.util  import split_quoted
-from distutils.spawn import find_executable
+from shutil import which
 from distutils import log as dulog
 
 try:
@@ -150,7 +150,7 @@ class Config(object):
                 except ImportError:
                     import _winreg as winreg
                 HKLM = winreg.HKEY_LOCAL_MACHINE
-                subkey = "SOFTWARE\Microsoft\MPI"
+                subkey = "SOFTWARE\\Microsoft\\MPI"
                 with winreg.OpenKey(HKLM, subkey) as key:
                     for i in range(winreg.QueryInfoKey(key)[1]):
                         name, value, type = winreg.EnumValue(key, i)
@@ -244,7 +244,7 @@ class Config(object):
             exe, args = parts[0], parts[1:]
             if not os.path.isabs(exe) and path:
                 exe = os.path.basename(exe)
-            exe = find_executable(exe, path)
+            exe = which(exe, path=path)
             if not exe: return None
             return ' '.join([exe]+args)
         COMPILERS = (

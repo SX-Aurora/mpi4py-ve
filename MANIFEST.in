@@ -16,5 +16,15 @@ recursive-include docs/usrman *
 recursive-include docs/apiref *
 recursive-include docs/source *
 
+include bin/mpirun-py
+include bin/mpi4pyvevars.sh
+include bin/mpi4pyvevars.csh
+
 prune conf/ci
 prune conf/conda-recipes
+
+prune src/mpi4pyve/MPI
+
+global-exclude */__pycache__/*
+global-exclude *.pyc
+
