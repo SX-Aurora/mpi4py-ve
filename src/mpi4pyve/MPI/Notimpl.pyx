@@ -28,6 +28,9 @@
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+import functools
+
+
 def _check_vai_buffer(obj):
     try: return hasattr(obj, '__ve_array_interface__')
     except: return False
@@ -53,12 +56,22 @@ def _raise_vai_buffer(arg):
     return
 
 
-def raise_notimpl_for_vai_buffer(func):
-    def _raise_vai_buffer_wrapper(*args, **kwargs):
+class _MethodWrapper:
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
+        return functools.partial(self.__call__, obj)
+
+    def __call__(self, *args, **kwargs):
         _find_vai_buffer(args)
         _find_vai_buffer_kwargs(kwargs)
-        return func(*args, **kwargs)
-    return _raise_vai_buffer_wrapper
+        return self.func(*args, **kwargs)
+
+def raise_notimpl_for_vai_buffer(func):
+    return _MethodWrapper(func)
 
 
 def raise_notimpl_for_necmpi(func):

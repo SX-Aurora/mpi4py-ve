@@ -793,7 +793,6 @@ class build_clib(cmd_build_clib.build_clib):
         #
         from distutils.ccompiler import new_compiler
         self.compiler = new_compiler(compiler=self.compiler,
-                                     dry_run=self.dry_run,
                                      force=self.force)
         #
         if self.define is not None:

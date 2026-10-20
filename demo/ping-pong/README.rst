@@ -3,7 +3,7 @@ Performs the ping-pong among 2 processes to measure bandwidth for data transfer.
 
 Issuing at the command line for data transferring between VH-VH::
 
-    $ mpiexec -veo -np 2 python ping-pong.py -dev1 vh -dev2 vh -n 25 -loop_count 10
+    $ mpirun-py -veo -np 2 python ping-pong.py -dev1 vh -dev2 vh -n 25 -loop_count 10
     {'dev1': 'vh', 'dev2': 'vh', 'n': 25, 'loop_count': 10}
     | Data Size (B) | Avg Transfer Time (s) | Bandwidth (GB/s) |
     |---------------|-----------------------|------------------|
@@ -36,7 +36,7 @@ Issuing at the command line for data transferring between VH-VH::
 
 Issuing at the command line for data transferring between VH-VE::
 
-    $ mpiexec -veo -np 2 python ping-pong.py -dev1 vh -dev2 ve -n 25 -loop_count 10
+    $ mpirun-py -veo -np 2 python ping-pong.py -dev1 vh -dev2 ve -n 25 -loop_count 10
     {'dev1': 'vh', 'dev2': 've', 'n': 25, 'loop_count': 10}
     | Data Size (B) | Avg Transfer Time (s) | Bandwidth (GB/s) |
     |---------------|-----------------------|------------------|
@@ -70,7 +70,7 @@ Issuing at the command line for data transferring between VH-VE::
 Issuing at the command line for data transferring between VE-VE (same VE node)::
 
 
-    $ mpiexec -veo -np 2 python ping-pong.py -dev1 ve -dev2 ve -n 25 -loop_count 10
+    $ mpirun-py -veo -np 2 python ping-pong.py -dev1 ve -dev2 ve -n 25 -loop_count 10
     {'dev1': 've', 'dev2': 've', 'n': 25, 'loop_count': 10}
     | Data Size (B) | Avg Transfer Time (s) | Bandwidth (GB/s) |
     |---------------|-----------------------|------------------|
@@ -105,7 +105,7 @@ Issuing at the command line for data transferring between VE-VE (same VE node)::
 
 Issuing at the command line for data transferring between VE-VE (different VE node)::
 
-    $ VE_NLCPY_NODELIST=0,1 mpiexec -veo -np 2 python ping-pong.py -dev1 ve -dev2 ve -n 25 -loop_count 10
+    $ VE_NLCPY_NODELIST=0,1 mpirun-py -veo -np 2 python ping-pong.py -dev1 ve -dev2 ve -n 25 -loop_count 10
     {'dev1': 've', 'dev2': 've', 'n': 25, 'loop_count': 10}
     | Data Size (B) | Avg Transfer Time (s) | Bandwidth (GB/s) |
     |---------------|-----------------------|------------------|

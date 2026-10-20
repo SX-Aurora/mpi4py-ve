@@ -1,0 +1,65 @@
+#!/bin/sh
+# ==========================================================================
+#  Copyright(C) 2026 NEC Corporation. All Rights Reserved.
+#
+#  NEC Numeric Library Collection
+#
+#  mpirun command wrapper script for mpi4py-ve python module.
+#  Before run this script, Please execute necmpivar.sh included in NEC MPI.
+# ==========================================================================
+
+# NEC MPI libraries to be set in LD_PRELOAD
+LIB_FILE1="libmpi.so"
+LIB_FILE2="libmpi_mem.so"
+
+# NEC MPI library path
+NMPI_LIBPATH=""
+
+# check if NMPI_ROOT is set.
+if [ "${NMPI_ROOT}" == "" ]; then
+    echo "Error: NMPI_ROOT is not set. Please run 'necmpivars.(sh|csh)' beforehand."
+    exit 1
+fi
+# check if NMPI_ROOT is a valid directroy.
+if [ ! -d "${NMPI_ROOT}" ]; then
+    echo "Error: NMPI_ROOT(${NMPI_ROOT}) is not a valid directory."
+    exit 0
+fi
+
+
+# change delimitor to ':'
+IFS_SAVE=${IFS}
+IFS=$':'
+
+# search LD_LIBRARY_PATH
+for dir in ${LD_LIBRARY_PATH}; do
+    case "${dir}" in
+        # look for directory starting with NMPI_ROOT
+        ${NMPI_ROOT}*)
+            # check if both libmpi.so and libmpi_mem.so are contained
+            file1="${dir}/${LIB_FILE1}"
+            file2="${dir}/${LIB_FILE2}"
+            # if OK, set NMPI_LIBPATH and exit loop
+            if [ -e "${file1}" ] && [ -e "${file2}" ]; then
+                NMPI_LIBPATH=${dir}
+                break
+            fi
+        ;;
+    esac
+done
+
+# restore delimitor
+IFS=${IFS_SAVE}
+
+# if NMPI_LIBPATH is not set, exit with error
+if [ "${NMPI_LIBPATH}" == "" ]; then
+    echo "Error: NEC MPI library files ${LIB_FILE1} and ${LIB_FILE2} are not found in LD_LIBRARY_PATH."
+    exit 1
+fi
+
+# set LD_PRELOAD environment
+export LD_PRELOAD="${NMPI_LIBPATH}/${LIB_FILE1}:${NMPI_LIBPATH}/${LIB_FILE2}:${LD_PRELOAD}"
+
+# run mpirun command
+mpirun "$@"
+

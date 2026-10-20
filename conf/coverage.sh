@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MPIEXEC=${MPIEXEC-mpiexec}
+MPIEXEC=${MPIEXEC-mpirun-py}
 PYTHON=${1-${PYTHON-python}}
 export PYTHONDONTWRITEBYTECODE=1
 

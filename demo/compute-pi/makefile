@@ -1,6 +1,6 @@
 .PHONY: test
 
-MPIEXEC=mpiexec -veo -n 1
+MPIEXEC=mpirun-py -veo -n 1
 PYTHON=python
 
 test:

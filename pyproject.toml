@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools==80.9.0", "packaging", "build", "patchelf"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mpi4py-ve"
+requires-python = ">= 3.12"
+description = "Python bindings for MPI"
+# replaces setup.cfg long_description
+readme = "README.rst"
+license = "BSD-2-Clause"
+license-files = ["LICENSE"]
+authors = [
+   {name = "NEC", email ="dev-nlcpy@sxarr.jp.nec.com"},
+]
+maintainers = [
+   {name = "NEC", email ="dev-nlcpy@sxarr.jp.nec.com"},
+]
+keywords = ['scientific computing',
+            'parallel computing',
+            'message passing interface',
+            'MPI']
+classifiers = [
+   "Development Status :: 5 - Production/Stable",
+   "Operating System :: POSIX :: Linux",
+   "Programming Language :: Python :: 3.12",
+   "Programming Language :: C",
+   "Programming Language :: Cython",
+   "Programming Language :: Python :: 3 :: Only",
+   "Topic :: Scientific/Engineering",
+   "Topic :: Software Development",
+]
+# version is set from mpi4pyve/__init__.py via setup.py
+dynamic = ["version"]
+
+# Confirmation is required as soon as the URL is confirmed.
+[project.urls]
+"Homepage"     = "https://github.com/SX-Aurora/mpi4py-ve/"
+"Download-URL" = "https://github.com/SX-Aurora/mpi4py-ve/releases/"
+
+[tool.setuptools]
+provides = ["mpi4py_ve"]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where   = ["src"]
+include = ["mpi4pyve",
+           "mpi4pyve.include.mpi4pyve",
+           "mpi4pyve.futures",
+           "mpi4pyve.util",
+           "mpi4pyve.veo"]
+exclude = []
+
+[tool.setuptools.package-dir]
+"mpi4pyve"         = "src/mpi4pyve"
+"mpi4pyve.include" = "src/mpi4pyve/include"
+"mpi4pyve.util"    = "src/mpi4pyve/util"
+"mpi4pyve.veo"     = "src/mpi4pyve/veo"
+
+[tool.setuptools.exclude-package-data]
+mpi4pyve = ["MPI.c", "MPI.pyx"]
+
+[tool.setuptools.package-data]
+"mpi4pyve" = ["*.pxd",
+              "include/mpi4pyve/*.h",
+              "include/mpi4pyve/*.i",
+              "include/mpi4pyve/*.pxi"]
+
+[tool.setuptools.data-files]
+"mpi4pyve/bin" = ["bin/mpi4pyvevars.sh",
+                  "bin/mpi4pyvevars.csh",
+                  "bin/mpirun-py"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+
+[tool.coverage.run]
+parallel = true
+branch = true
+source = ["mpi4pyve"]
+omit = ["*/mpi4pyve/futures/_base.py"]
+
+[tool.coverage.paths]
+source = [
+    "src/mpi4pyve",
+    "*/mpi4pyve",
+]
+
+[tool.flake8]
+ignore = ["F401"]
+exclude = ["_[a-z]*.py"]
+
+[tool.pycodestyle]
+ignore = ["E203", "E305", "E306", "E722"]
+exclude = ["*/futures/_base.py"]
+
+[tool.pydocstyle]
+match = "(?!_[a-z]).*\\.py"
+add_ignore = ["D402"]
+

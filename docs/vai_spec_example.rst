@@ -224,7 +224,7 @@ Execution
 
 ::
 
-  $ mpirun -veo -np 2 python mpi_send_recv.py
+  $ mpirun-py -veo -np 2 python mpi_send_recv.py
   Result Success (rank=0)
   Result Success (rank=1)
 
